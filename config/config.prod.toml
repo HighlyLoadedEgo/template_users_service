@@ -2,3 +2,10 @@
 host = '0.0.0.0'
 port = 1337
 debug = false
+
+[database]
+host = "database"
+port = 5432
+password = "postgres"
+user = "postgres"
+dbname = "postgres"

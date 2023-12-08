@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from src.database.config import DatabaseConfig
+
 
 class ServerConfig(BaseModel):
     host: str = "127.0.0.1"
@@ -9,3 +11,4 @@ class ServerConfig(BaseModel):
 
 class Settings(BaseModel):
     api: ServerConfig
+    database: DatabaseConfig
