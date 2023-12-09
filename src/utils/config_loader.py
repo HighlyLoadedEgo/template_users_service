@@ -1,8 +1,14 @@
 import os
 import tomllib
-from typing import Any, TypeVar
+from typing import (
+    Any,
+    TypeVar,
+)
 
-from pydantic import BaseModel, TypeAdapter
+from pydantic import (
+    BaseModel,
+    TypeAdapter,
+)
 
 ConfigModel = TypeVar("ConfigModel", bound=Any)
 DEFAULT_CONFIG_PATH = "./config/config.dev.toml"
