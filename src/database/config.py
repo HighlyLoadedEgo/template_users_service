@@ -1,4 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import (
+    BaseModel,
+    Field,
+)
 
 
 class DatabaseConfig(BaseModel):
@@ -8,8 +11,7 @@ class DatabaseConfig(BaseModel):
     user: str = Field(default="USER")
     dbname: str = Field(default="DBNAME")
 
-    @property
-    def dsn(self, async_: bool = True) -> str:
+    def db_url(self, async_: bool = True) -> str:
         if async_:
             return (
                 f"postgresql+asyncpg://{self.user}:{self.password}"
