@@ -9,3 +9,8 @@ port = 5432
 password = "postgres"
 user = "postgres"
 dbname = "postgres"
+
+[jwt]
+algorithm = "RS256"
+access_token_expire_minutes = 60
+refresh_token_expire_minutes = 43200
