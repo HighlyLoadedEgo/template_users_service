@@ -12,7 +12,6 @@ from src.auth.utils import key_loader
 
 class JWTConfig(BaseModel):
     algorithm: str
-    secret_key: str
     access_token_expire_minutes: int
     refresh_token_expire_minutes: int
     public_key: str = Field(
