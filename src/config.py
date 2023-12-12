@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 from src.auth.config import JWTConfig
-from src.database.config import DatabaseConfig
+from src.database import DatabaseConfig
 
 
 class ServerConfig(BaseModel):
