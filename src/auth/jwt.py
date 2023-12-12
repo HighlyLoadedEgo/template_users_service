@@ -2,7 +2,7 @@ import datetime
 
 from jose import jwt
 
-from src.auth.common.jwt import BaseJWTManager
+from src.auth.common.jwt import JWTManager
 from src.auth.config import JWTConfig
 from src.auth.constants import TokenTypes
 from src.auth.exceptions import InvalidTokenException
@@ -13,7 +13,7 @@ from src.auth.schemas import (
 )
 
 
-class JWTManager(BaseJWTManager):
+class JWTManagerImpl(JWTManager):
     def __init__(self, config: JWTConfig) -> None:
         self._config = config
 
@@ -23,15 +23,19 @@ class JWTManager(BaseJWTManager):
         access_jwt = self._generate_token(
             payload=copy_payload,
             iat=iat,
-            exp=iat
-            + datetime.timedelta(minutes=self._config.access_token_expire_minutes),
+            exp=(
+                iat
+                + datetime.timedelta(minutes=self._config.access_token_expire_minutes)
+            ),
             type_=TokenTypes.ACCESS.value,
         )
         refresh_jwt = self._generate_token(
             payload=copy_payload,
             iat=iat,
-            exp=iat
-            + datetime.timedelta(minutes=self._config.refresh_token_expire_minutes),
+            exp=(
+                iat
+                + datetime.timedelta(minutes=self._config.refresh_token_expire_minutes)
+            ),
             type_=TokenTypes.REFRESH.value,
         )
 
@@ -41,7 +45,7 @@ class JWTManager(BaseJWTManager):
         )
 
     def refresh_tokens(self, token: str) -> TokensData:
-        payload = self._decode_token(token=token)
+        payload = self.decode_token(token=token)
         if payload.token != TokenTypes.REFRESH:
             raise InvalidTokenException()
 

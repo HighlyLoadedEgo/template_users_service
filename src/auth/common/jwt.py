@@ -5,12 +5,13 @@ from abc import (
 from datetime import datetime
 
 from src.auth.schemas import (
+    TokenPayload,
     TokensData,
     UserPayload,
 )
 
 
-class BaseJWTManager(ABC):
+class JWTManager(ABC):
     """Base class for JWT managers."""
 
     @abstractmethod
@@ -28,5 +29,5 @@ class BaseJWTManager(ABC):
         """Generate a JWT token."""
 
     @abstractmethod
-    def _decode_token(self, token: str) -> TokensData:
+    def decode_token(self, token: str) -> TokenPayload:
         """Decode a JWT token and return the decoded payload."""
