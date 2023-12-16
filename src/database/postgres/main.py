@@ -7,12 +7,12 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from src.database.config import DatabaseConfig
+from src.database.postgres.config import DatabaseConfig
 
 
 def get_engine(config: DatabaseConfig, async_: bool = True) -> AsyncEngine:
     """Create an engine for the database."""
-    engine = create_async_engine(config.database_url(async_=async_))
+    engine = create_async_engine(config.db_url(async_=async_))
 
     return engine
 
