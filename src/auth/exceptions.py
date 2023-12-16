@@ -1,12 +1,18 @@
+from dataclasses import dataclass
+
+from src.auth.constants import Roles
 from src.common.exceptions import BaseAppException
 
 
+@dataclass(eq=False)
 class AccessDeniedException(BaseAppException):
     """Exception raised when an access denied."""
 
+    role: str = Roles.USER.value
+
     @property
     def message(self) -> str:
-        return "Access for this role denied!"
+        return f"Access for role {self.role} denied!"
 
 
 class InvalidTokenException(BaseAppException):

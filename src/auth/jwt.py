@@ -1,6 +1,9 @@
 import datetime
 
-from jose import jwt
+from jose import (
+    JWTError,
+    jwt,
+)
 
 from src.auth.common.jwt import JWTManager
 from src.auth.config import JWTConfig
@@ -46,7 +49,7 @@ class JWTManagerImpl(JWTManager):
 
     def refresh_tokens(self, token: str) -> TokensData:
         payload = self.decode_token(token=token)
-        if payload.token != TokenTypes.REFRESH:
+        if payload.type != TokenTypes.REFRESH:
             raise InvalidTokenException()
 
         refreshed_tokens = self.encode_token(UserPayload(**payload.model_dump()))
@@ -66,7 +69,7 @@ class JWTManagerImpl(JWTManager):
             payload = jwt.decode(
                 token, self._config.public_key, algorithms=[self._config.algorithm]
             )
-        except jwt.JWTError as err:
+        except JWTError as err:
             raise InvalidTokenException() from err
 
         return TokenPayload(**payload)

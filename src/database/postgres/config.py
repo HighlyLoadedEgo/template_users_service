@@ -18,6 +18,6 @@ class DatabaseConfig(BaseModel):
                 f"@{self.host}:{self.port}/{self.dbname}"
             )
         return (
-            f"postgresql+pyscopg2://{self.user}:{self.password}"
+            f"postgresql://{self.user}:{self.password}"
             f"@{self.host}:{self.port}/{self.dbname}"
         )
