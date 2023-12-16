@@ -11,7 +11,7 @@ from pydantic import (
 )
 
 ConfigModel = TypeVar("ConfigModel", bound=Any)
-DEFAULT_CONFIG_PATH = "./config/config.dev.toml"
+CONFIG_PATH = os.getenv("CONFIG_PATH", "./config/config.dev.toml")
 
 
 def load_config_file(config_path: str) -> dict:
@@ -20,11 +20,13 @@ def load_config_file(config_path: str) -> dict:
         return tomllib.load(config_file)
 
 
-def load_config(config_type_model: type[BaseModel]) -> BaseModel:
+def load_config(
+    config_type_model: type[BaseModel], config_scope: str | None
+) -> BaseModel:
     """Load config file and adapt model type."""
-    config_path = os.getenv("CONFIG_PATH", DEFAULT_CONFIG_PATH)
-
-    file_data = load_config_file(config_path=config_path)
+    file_data = load_config_file(config_path=CONFIG_PATH)
+    if config_scope is not None:
+        file_data = file_data[config_scope]
 
     config_data = TypeAdapter(type=config_type_model).validate_python(file_data)
 

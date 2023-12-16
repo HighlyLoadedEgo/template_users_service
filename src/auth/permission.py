@@ -28,16 +28,14 @@ class CheckPermission:
     ) -> "CheckPermission":
         """Check access for permission list."""
         payload = self._jwt_manager.decode_token(token=credentials.credentials)
-        if payload.role not in permission_list:
-            raise AccessDeniedException()
+        if (role := payload.role) not in permission_list:
+            raise AccessDeniedException(role=role)
         self.__payload = payload
 
         return self
 
     def get_user_payload(self) -> UserPayload:
         """Get user payload for authentication."""
-        user_payload = TypeAdapter(UserPayload).validate_python(
-            self.__payload.model_dump()
-        )
+        user_payload = TypeAdapter(UserPayload).validate_python(self.__payload)
 
         return user_payload
