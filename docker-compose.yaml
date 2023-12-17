@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   database:
-      container_name: lectr.auth.database
+      container_name: users.database
       image: postgres
       restart: always
       environment:
