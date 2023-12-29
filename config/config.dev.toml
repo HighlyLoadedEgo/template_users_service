@@ -1,7 +1,6 @@
 [api]
 host = '127.0.0.1'
 port = 8000
-debug = true
 
 [database]
 host = "localhost"
@@ -14,3 +13,8 @@ dbname = "postgres"
 algorithm = "RS256"
 access_token_expire_minutes = 60
 refresh_token_expire_minutes = 43200
+
+[app]
+debug = true
+title = "User service"
+version = "1.0.0"

@@ -1,4 +1,4 @@
-from src.modules.users.schemas.schemas import (
+from src.modules.users.schemas.dtos import (
     CreateUserSchema,
     FullUserSchema,
     GetUserFiltersSchema,
