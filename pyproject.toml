@@ -15,6 +15,7 @@ python-jose = "^3.3.0"
 uvicorn = "^0.24.0.post1"
 psycopg2-binary = "^2.9.9"
 bcrypt = "^4.1.2"
+asyncpg = "^0.29.0"
 
 
 [tool.poetry.group.tools.dependencies]

@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database import SqlAlchemyUow
+from src.core.database import SqlAlchemyUow
 from src.modules.users.common.reader import UserReader
 from src.modules.users.common.repository import UserRepository
 

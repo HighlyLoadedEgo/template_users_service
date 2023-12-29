@@ -13,11 +13,11 @@ from sqlalchemy.orm import (
     mapped_column,
 )
 
-from src.auth import Roles
-from src.database import Base
+from src.core.auth import Roles
+from src.core.database.postgres.models import BaseWithDate
 
 
-class User(Base):
+class User(BaseWithDate):
     __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)

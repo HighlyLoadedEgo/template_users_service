@@ -1,7 +1,7 @@
 from uuid import UUID
 
-from src.common.interfaces.service import Service
-from src.database.postgres.schemas import PaginationSchema
+from src.core.common import Service
+from src.core.database.postgres.schemas import PaginationSchema
 from src.modules.users import use_cases
 from src.modules.users.schemas import (
     CreateUserSchema,

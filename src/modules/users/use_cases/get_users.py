@@ -1,7 +1,5 @@
-import asyncio
-
-from src.common.interfaces.use_case import UseCase
-from src.database.postgres.schemas import PaginationSchema
+from src.core.common.interfaces.use_case import UseCase
+from src.core.database.postgres.schemas import PaginationSchema
 from src.modules.users.schemas import (
     GetUserFiltersSchema,
     UsersWithPaginationSchema,
@@ -17,20 +15,14 @@ class GetUsersUseCase(UseCase):
         self, filters: GetUserFiltersSchema, pagination: PaginationSchema
     ) -> UsersWithPaginationSchema:
         """Get all users with pagination and filters."""
-        users = asyncio.create_task(
-            self._uow.user_reader.get_users(filters=filters, pagination=pagination)
+        users = await self._uow.user_reader.get_users(
+            filters=filters, pagination=pagination
         )
 
-        total_count_of_users = asyncio.create_task(
-            self._uow.user_reader.get_users_count()
-        )
+        total_count_of_users = await self._uow.user_reader.get_users_count()
 
-        await asyncio.gather(users, total_count_of_users)
-
-        return UsersWithPaginationSchema.model_validate(
-            dict(
-                users=users.result(),
-                total=total_count_of_users.result(),
-                **pagination.model_dump(),
-            )
+        return UsersWithPaginationSchema(
+            users=users,  # type: ignore
+            total=total_count_of_users,
+            **pagination.model_dump(),
         )

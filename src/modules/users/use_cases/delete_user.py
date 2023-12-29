@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from src.common.interfaces.use_case import UseCase
+from src.core.common.interfaces.use_case import UseCase
 from src.modules.users.uow import UserUoW
 
 

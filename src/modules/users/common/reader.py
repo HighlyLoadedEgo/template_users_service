@@ -6,7 +6,7 @@ from abc import (
 from sqlalchemy import ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.postgres.schemas import PaginationSchema
+from src.core.database.postgres.schemas import PaginationSchema
 from src.modules.users.models import User
 from src.modules.users.schemas import GetUserFiltersSchema
 
