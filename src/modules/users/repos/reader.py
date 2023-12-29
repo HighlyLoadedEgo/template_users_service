@@ -4,9 +4,9 @@ from sqlalchemy import (
     select,
 )
 
-from src.common.constants import Empty
-from src.database import SortOrder
-from src.database.postgres.schemas import PaginationSchema
+from src.core.common.constants import Empty
+from src.core.database.postgres.constants import SortOrder
+from src.core.database.postgres.schemas import PaginationSchema
 from src.modules.users.common.reader import UserReader
 from src.modules.users.exceptions import UserDoesNotExistException
 from src.modules.users.models import User
@@ -23,8 +23,8 @@ class UserReaderImpl(UserReader):
         filter_scope = list()
         if filters.deleted is not Empty.UNSET:
             filter_scope.append(User.is_deleted.is_(filters.deleted))
-        if filters.roles is not Empty.UNSET:
-            filter_scope.append(User.role.in_(filters.roles))
+        if filters.role is not Empty.UNSET:
+            filter_scope.append(User.role == filters.role)  # type: ignore
 
         stmt = stmt.where(*filter_scope)
 
@@ -45,7 +45,7 @@ class UserReaderImpl(UserReader):
 
     async def get_users_count(self) -> int | None:
         """Get users count."""
-        stmt = select(func.count(User))
+        stmt = select(func.count(1)).select_from(User)
 
         result = await self._session.scalar(stmt)
 

@@ -7,7 +7,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.exc import IntegrityError
 
-from src.common.constants import Empty
+from src.core.common.constants import Empty
 from src.modules.users.common.repository import UserRepository
 from src.modules.users.exceptions import (
     UserDoesNotExistException,
