@@ -6,9 +6,10 @@ from sqlalchemy import (
     pool,
 )
 
+from src.core.database import DatabaseConfig
+from src.core.database.postgres.models import Base
 from src.core.utils.config_loader import load_config
-from src.database import DatabaseConfig
-from src.database.postgres.models import BaseWithDate
+from src.modules.users.models import *
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -23,7 +24,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = BaseWithDate.metadata
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
