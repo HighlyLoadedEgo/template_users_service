@@ -36,7 +36,9 @@ def sync_session_maker(sync_engine: Engine) -> sessionmaker[Session]:
 
 def async_session_maker(async_engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
     """Create an async session for the database."""
-    return async_sessionmaker(async_engine, autocommit=False, autoflush=False)
+    return async_sessionmaker(
+        async_engine, autocommit=False, autoflush=False, expire_on_commit=False
+    )
 
 
 async def create_async_session(

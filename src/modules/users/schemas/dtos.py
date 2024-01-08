@@ -21,9 +21,9 @@ class FullUserSchema(BaseModel):
     phone: str | None = None
     role: str
     is_deleted: bool
-    inserted_at: datetime.datetime
-    updated_at: datetime.datetime
-    hashed_password: bytes
+    created_at: datetime.datetime
+    updated_at: datetime.datetime | None
+    hashed_password: str
 
 
 class LoginUserSchema(BaseModel):
