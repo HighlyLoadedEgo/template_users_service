@@ -13,8 +13,7 @@ class CreateUserUseCase(UseCase):
 
     async def __call__(self, create_user_data: CreateUserSchema) -> FullUserSchema:
         """Create user."""
-        # TODO: сделать так чтобы майпай не реагировал
-        create_user_data.password = generate_password_hash(create_user_data.password)  # type: ignore
+        create_user_data.password = generate_password_hash(create_user_data.password)
 
         async with self._uow as uow:
             created_user = await uow.user_repository.create_user(

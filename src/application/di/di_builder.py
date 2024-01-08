@@ -14,8 +14,8 @@ from src.modules.users.stubs import get_service_stub
 def build_di(app: FastAPI, config: Settings) -> None:
     async_engine = get_engine(config=config.database, async_=True)
     user_uow_provider = UserUoWProvider(
-        session_maker=async_session_maker(async_engine=async_engine)
-    )  # type: ignore
+        session_maker=async_session_maker(async_engine=async_engine)  # type: ignore
+    )
 
     app.dependency_overrides[get_service_stub] = get_user_service
     app.dependency_overrides[user_uow_stub] = user_uow_provider.user_uow

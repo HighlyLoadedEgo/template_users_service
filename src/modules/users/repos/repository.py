@@ -23,10 +23,27 @@ from src.modules.users.schemas import (
 class UserRepositoryImpl(UserRepository):
     async def create_user(self, create_user_data: CreateUserSchema) -> User | None:
         """Create a new user in database."""
-        stmt = insert(User).values(**create_user_data.model_dump()).returning(User)
+        optional_create_data = dict()
+        if create_user_data.email:
+            optional_create_data.update({"email": create_user_data.email})
+        if create_user_data.phone:
+            optional_create_data.update({"phone": create_user_data.phone})
+
+        stmt = (
+            insert(User)
+            .values(
+                username=create_user_data.username,
+                hashed_password=create_user_data.password,
+                **optional_create_data,
+            )
+            .returning(User)
+        )
+
         try:
             result = await self._session.scalar(stmt)
+            await self._session.flush()
         except IntegrityError as err:
+            # TODO переделать обработку ошибок
             raise UserIsExistException() from err
 
         return result

@@ -29,8 +29,6 @@ repos:
     rev: v0.1.4
     hooks:
       - id: ruff
-        args: [ --fix ]
-      - id: ruff-format
 
   # Typos
   - repo: https://github.com/crate-ci/typos
