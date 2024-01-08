@@ -16,10 +16,13 @@ from src.modules.users.schemas import (
     CreateUserSchema,
     GetUserFiltersSchema,
     LoginUserSchema,
+    UpdateUserSchema,
 )
 from src.modules.users.schemas.requests_schemas import (
     CreateUserRequestSchema,
     LoginUserRequestSchema,
+    UpdateUserRequestSchema,
+    UpdateUserRoleRequestSchema,
 )
 from src.modules.users.schemas.responses_schemas import (
     FullUserResponseSchema,
@@ -32,17 +35,11 @@ user_routers = APIRouter(prefix="/users", tags=["User Endpoints"])
 
 @user_routers.get("", response_model=UsersResponseSchema)
 async def get_users(
-    deleted: bool
-    | Empty = Query(default=Empty.UNSET, description="Filter users by deleted status"),
-    role: Roles
-    | Empty = Query(default=Empty.UNSET, description="Filter users by role"),
-    offset: int
-    | Empty = Query(default=Empty.UNSET, description="Pagination with offset"),
-    limit: int
-    | Empty = Query(default=Empty.UNSET, description="Pagination with limit"),
-    order: SortOrder = Query(
-        default=SortOrder.ASC, description="Pagination with order"
-    ),
+    deleted: bool | Empty = Query(default=Empty.UNSET, description="Deleted status"),
+    role: Roles | Empty = Query(default=Empty.UNSET, description="Filter by role"),
+    offset: int | Empty = Query(default=Empty.UNSET, description="Pagination offset"),
+    limit: int | Empty = Query(default=Empty.UNSET, description="Pagination limit"),
+    order: SortOrder = Query(default=SortOrder.ASC, description="Pagination order"),
     user_service: UserService = Depends(get_service_stub),
 ):
     return await user_service.get_users(
@@ -68,18 +65,36 @@ async def get_user(
     return await user_service.get_user_by_id(user_id=user_id)
 
 
-@user_routers.patch("/{user_id}")
+@user_routers.patch("/{user_id}", response_model=SuccessResponse)
 async def update_user(
-    user_id: uuid.UUID, user_service: UserService = Depends(get_service_stub)
+    user_id: uuid.UUID,
+    update_user_data: UpdateUserRequestSchema,
+    user_service: UserService = Depends(get_service_stub),
 ):
-    pass
+    await user_service.update_user(
+        update_user_data=UpdateUserSchema(
+            user_id=user_id, **update_user_data.model_dump()
+        )
+    )
+
+    return SuccessResponse(message="Updated successfully!", data=dict(user_id=user_id))
 
 
-@user_routers.patch("/{user_id}/role")
+@user_routers.patch("/{user_id}/role", response_model=SuccessResponse)
 async def update_user_role(
-    user_id: uuid.UUID, user_service: UserService = Depends(get_service_stub)
+    user_id: uuid.UUID,
+    update_user_role_data: UpdateUserRoleRequestSchema,
+    user_service: UserService = Depends(get_service_stub),
 ):
-    pass
+    await user_service.update_user(
+        update_user_data=UpdateUserSchema(
+            user_id=user_id, **update_user_role_data.model_dump()
+        )
+    )
+
+    return SuccessResponse(
+        message="Role updated successfully!", data=dict(user_id=user_id)
+    )
 
 
 @user_routers.post("", response_model=FullUserResponseSchema)
