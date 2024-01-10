@@ -31,3 +31,10 @@ class UsersResponseSchema(BaseModel):
     offset: int | Empty = Empty.UNSET
     limit: int | Empty = Empty.UNSET
     order: SortOrder = SortOrder.ASC
+
+
+class TokensDataResponse(BaseModel):
+    """Response schema for tokens endpoint."""
+
+    access_token: str
+    refresh_token: str
