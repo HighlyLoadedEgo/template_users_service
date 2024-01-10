@@ -1,12 +1,20 @@
 import uuid
+from typing import Annotated
 
 from fastapi import (
     APIRouter,
     Depends,
     Query,
 )
+from fastapi.security import (
+    HTTPAuthorizationCredentials,
+    HTTPBearer,
+)
 
 from src.core.auth import Roles
+from src.core.auth.common.jwt import JWTManager
+from src.core.auth.permission import CheckPermission
+from src.core.auth.stubs import jwt_manager_stub
 from src.core.common.constants import Empty
 from src.core.common.schemas.base_responses import SuccessResponse
 from src.core.database.postgres.constants import SortOrder
@@ -26,6 +34,7 @@ from src.modules.users.schemas.requests_schemas import (
 )
 from src.modules.users.schemas.responses_schemas import (
     FullUserResponseSchema,
+    TokensDataResponse,
     UsersResponseSchema,
 )
 from src.modules.users.stubs import get_service_stub
@@ -48,7 +57,17 @@ async def get_users(
     )
 
 
-@user_routers.post("/login", response_model=FullUserResponseSchema)
+@user_routers.get("/me", response_model=FullUserResponseSchema)
+async def get_me(
+    token_payload: Annotated[CheckPermission, Depends(CheckPermission())],
+    user_service: UserService = Depends(get_service_stub),
+):
+    user_id = token_payload.get_user_payload().id
+
+    return await user_service.get_user_by_id(user_id=user_id)
+
+
+@user_routers.post("/login", response_model=TokensDataResponse)
 async def login(
     login_data: LoginUserRequestSchema,
     user_service: UserService = Depends(get_service_stub),
@@ -58,6 +77,14 @@ async def login(
     )
 
 
+@user_routers.post("/refresh_token")
+async def refresh_token(
+    auth_data: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())],
+    jwt_manager: JWTManager = Depends(jwt_manager_stub),
+):
+    return jwt_manager.refresh_tokens(token=auth_data.credentials)
+
+
 @user_routers.get("/{user_id}", response_model=FullUserResponseSchema)
 async def get_user(
     user_id: uuid.UUID, user_service: UserService = Depends(get_service_stub)
@@ -65,7 +92,11 @@ async def get_user(
     return await user_service.get_user_by_id(user_id=user_id)
 
 
-@user_routers.patch("/{user_id}", response_model=SuccessResponse)
+@user_routers.patch(
+    "/{user_id}",
+    response_model=SuccessResponse,
+    dependencies=[Depends(CheckPermission())],
+)
 async def update_user(
     user_id: uuid.UUID,
     update_user_data: UpdateUserRequestSchema,
@@ -80,7 +111,11 @@ async def update_user(
     return SuccessResponse(message="Updated successfully!", data=dict(user_id=user_id))
 
 
-@user_routers.patch("/{user_id}/role", response_model=SuccessResponse)
+@user_routers.patch(
+    "/{user_id}/role",
+    response_model=SuccessResponse,
+    dependencies=[Depends(CheckPermission(permission_list=[Roles.ADMIN]))],
+)
 async def update_user_role(
     user_id: uuid.UUID,
     update_user_role_data: UpdateUserRoleRequestSchema,
@@ -107,7 +142,11 @@ async def create_user(
     )
 
 
-@user_routers.delete("/{user_id}", response_model=SuccessResponse)
+@user_routers.delete(
+    "/{user_id}",
+    response_model=SuccessResponse,
+    dependencies=[Depends(CheckPermission(permission_list=[Roles.USER]))],
+)
 async def delete_user(
     user_id: uuid.UUID, user_service: UserService = Depends(get_service_stub)
 ):

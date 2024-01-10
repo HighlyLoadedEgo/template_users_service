@@ -1,5 +1,7 @@
 from uuid import UUID
 
+from src.core.auth import TokensData
+from src.core.auth.common.jwt import JWTManager
 from src.core.common import Service
 from src.core.database.postgres.schemas import PaginationSchema
 from src.modules.users import use_cases
@@ -15,8 +17,9 @@ from src.modules.users.uow import UserUoW
 
 
 class UserService(Service):
-    def __init__(self, uow: UserUoW):
+    def __init__(self, uow: UserUoW, jwt_manager: JWTManager):
         self._uow = uow
+        self._jwt_manager = jwt_manager
 
     async def get_users(
         self, filters: GetUserFiltersSchema, pagination: PaginationSchema
@@ -25,12 +28,10 @@ class UserService(Service):
             filters=filters, pagination=pagination
         )
 
-    async def check_valid_user(
-        self, user_credentials: LoginUserSchema
-    ) -> FullUserSchema:
-        return await use_cases.CheckValidUserUseCase(uow=self._uow)(
-            user_credentials=user_credentials
-        )
+    async def check_valid_user(self, user_credentials: LoginUserSchema) -> TokensData:
+        return await use_cases.CheckValidUserUseCase(
+            uow=self._uow, jwt_manager=self._jwt_manager
+        )(user_credentials=user_credentials)
 
     async def get_user_by_email(self, email: str) -> FullUserSchema:
         return await use_cases.GetUserByEmailUseCase(uow=self._uow)(email=email)

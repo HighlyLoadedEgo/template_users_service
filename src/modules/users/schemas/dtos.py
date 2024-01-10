@@ -19,7 +19,7 @@ class FullUserSchema(BaseModel):
     username: str
     email: EmailStr | None = None
     phone: str | None = None
-    role: str
+    role: Roles
     is_deleted: bool
     created_at: datetime.datetime
     updated_at: datetime.datetime | None
