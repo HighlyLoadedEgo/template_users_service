@@ -1,30 +1,39 @@
+from src.core.auth import (
+    TokensData,
+    UserPayload,
+)
+from src.core.auth.common.jwt import JWTManager
 from src.core.common.interfaces.use_case import UseCase
 from src.modules.users.exceptions import IncorrectUserCredentialsException
-from src.modules.users.schemas import (
-    FullUserSchema,
-    LoginUserSchema,
-)
+from src.modules.users.schemas import LoginUserSchema
 from src.modules.users.uow import UserUoW
 from src.modules.users.utils import verify_password_hash
 
 
 class CheckValidUserUseCase(UseCase):
-    def __init__(self, uow: UserUoW) -> None:
+    def __init__(self, uow: UserUoW, jwt_manager: JWTManager):
         self._uow = uow
+        self._jwt_manager = jwt_manager
 
-    async def __call__(self, user_credentials: LoginUserSchema) -> FullUserSchema:
+    async def __call__(self, user_credentials: LoginUserSchema) -> TokensData:
         """Get a user by id."""
         user = await self._uow.user_reader.get_user_by_username(
             username=user_credentials.username
         )
-        full_user_data = FullUserSchema.model_validate(user)
+
+        if user is None:
+            raise IncorrectUserCredentialsException()
 
         password_verified = verify_password_hash(
             password=user_credentials.password,
-            hashed_password=full_user_data.hashed_password,
+            hashed_password=user.hashed_password,
         )
 
-        if password_verified:
-            return full_user_data
+        if not password_verified:
+            raise IncorrectUserCredentialsException()
 
-        raise IncorrectUserCredentialsException()
+        token_data = self._jwt_manager.encode_token(
+            payload=UserPayload.model_validate(user)
+        )
+
+        return token_data
