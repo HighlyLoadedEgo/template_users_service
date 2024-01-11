@@ -4,18 +4,18 @@ from src.core.common import BaseAppException
 
 
 @dataclass(eq=True)
-class UserIsExistException(BaseAppException):
+class UserDataIsExistException(BaseAppException):
     """Base exception for user"""
 
-    invalid_data: list[str] | str = "data"
+    data: list[str] | str = "data"
 
     @property
     def message(self) -> str:
-        return f"User with this {self.invalid_data} is already registered!"
+        return f"User with data '{self.data}' is already registered!"
 
 
 @dataclass(eq=True)
-class UserDoesNotExistException(UserIsExistException):
+class UserDoesNotExistException(BaseAppException):
     """Exception raised when user does not exist."""
 
     data: str = "data"
@@ -25,7 +25,7 @@ class UserDoesNotExistException(UserIsExistException):
         return f"User with this {self.data} is not registered!"
 
 
-class IncorrectUserCredentialsException(UserIsExistException):
+class IncorrectUserCredentialsException(BaseAppException):
     """Exception raised when incorrect credentials was sent by user."""
 
     @property

@@ -9,7 +9,7 @@ class GetUserByIdUseCase(UseCase):
     def __init__(self, uow: UserUoW) -> None:
         self._uow = uow
 
-    async def __call__(self, user_id: UUID) -> FullUserSchema:
+    async def __call__(self, user_id: UUID) -> FullUserSchema | None:
         """Get a user by id."""
         user = await self._uow.user_repository.get_user_by_id(user_id=user_id)
 

@@ -1,4 +1,4 @@
-[api]
+[server]
 host = '127.0.0.1'
 port = 8000
 
@@ -18,3 +18,11 @@ refresh_token_expire_minutes = 43200
 debug = true
 title = "User service"
 version = "1.0.0"
+local = true
+doc_url = "/docs"
+openapi_url = "/openapi.json"
+redoc_url = "/redoc"
+doc_title = "docs"
+doc_password = "admin"
+doc_username = "admin"
+origins = ["*"]
