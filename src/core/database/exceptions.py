@@ -1,10 +1,13 @@
-class DatabaseException(Exception):
-    """Base class for exceptions in this module."""
+from src.core.common import BaseAppException
 
 
-class CommitErrorException(DatabaseException):
+class CommitErrorException(BaseAppException):
     """Exception raised when commit errors occur."""
 
 
-class RollbackErrorException(DatabaseException):
+class RollbackErrorException(BaseAppException):
     """Exception raised when rollback errors occur."""
+
+
+class RepositoryException(BaseAppException):
+    """Exception raised when repo errors occur."""

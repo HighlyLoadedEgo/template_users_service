@@ -34,11 +34,7 @@ class UserReaderImpl(UserReader):
             else:
                 stmt.order_by(User.username.desc())
 
-        if pagination.limit is not Empty.UNSET:
-            stmt.limit(pagination.limit)
-        if pagination.offset is not Empty.UNSET:
-            stmt.offset(pagination.offset)
-
+        stmt = stmt.limit(pagination.limit).offset(pagination.offset)
         result = await self._session.scalars(stmt)
 
         return result

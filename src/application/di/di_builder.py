@@ -14,6 +14,7 @@ from src.modules.users.stubs import get_service_stub
 
 
 def build_di(app: FastAPI, config: Settings) -> None:
+    """Create an instance and override the depends."""
     async_engine = get_engine(config=config.database, async_=True)
     user_uow_provider = UserUoWProvider(
         session_maker=async_session_maker(async_engine=async_engine)  # type: ignore

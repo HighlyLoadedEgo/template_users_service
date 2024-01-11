@@ -33,18 +33,18 @@ class UserService(Service):
             uow=self._uow, jwt_manager=self._jwt_manager
         )(user_credentials=user_credentials)
 
-    async def get_user_by_email(self, email: str) -> FullUserSchema:
+    async def get_user_by_email(self, email: str) -> FullUserSchema | None:
         return await use_cases.GetUserByEmailUseCase(uow=self._uow)(email=email)
 
-    async def get_user_by_username(self, username: str) -> FullUserSchema:
+    async def get_user_by_username(self, username: str) -> FullUserSchema | None:
         return await use_cases.GetUserByUsernameUseCase(uow=self._uow)(
             username=username
         )
 
-    async def get_user_by_id(self, user_id: UUID) -> FullUserSchema:
+    async def get_user_by_id(self, user_id: UUID) -> FullUserSchema | None:
         return await use_cases.GetUserByIdUseCase(uow=self._uow)(user_id=user_id)
 
-    async def create_user(self, create_user_data: CreateUserSchema) -> FullUserSchema:
+    async def create_user(self, create_user_data: CreateUserSchema) -> None:
         return await use_cases.CreateUserUseCase(uow=self._uow)(
             create_user_data=create_user_data
         )
