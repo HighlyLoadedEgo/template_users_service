@@ -6,21 +6,37 @@ from fastapi import (
     Depends,
     Path,
     Query,
+    status,
 )
 from fastapi.security import (
     HTTPAuthorizationCredentials,
     HTTPBearer,
 )
 
-from src.core.auth import Roles
+from src.core.auth import (
+    Roles,
+    UserPayload,
+)
 from src.core.auth.common.jwt import JWTManager
+from src.core.auth.exceptions import (
+    AccessDeniedException,
+    InvalidTokenException,
+)
 from src.core.auth.permission import CheckPermission
 from src.core.auth.stubs import jwt_manager_stub
 from src.core.common.constants import Empty
-from src.core.common.schemas.base_responses import OkResponse
+from src.core.common.schemas.base_responses import (
+    ErrorResponse,
+    OkResponse,
+)
 from src.core.database.postgres.constants import SortOrder
 from src.core.database.postgres.schemas import PaginationSchema
 from src.modules.users import UserService
+from src.modules.users.exceptions import (
+    IncorrectUserCredentialsException,
+    UserDataIsExistException,
+    UserDoesNotExistException,
+)
 from src.modules.users.schemas import (
     CreateUserSchema,
     GetUserFiltersSchema,
@@ -43,7 +59,49 @@ from src.modules.users.stubs import get_service_stub
 user_routers = APIRouter(prefix="/users", tags=["User Endpoints"])
 
 
-@user_routers.get("/", response_model=OkResponse[UsersResponseSchema])
+@user_routers.post(
+    "/login",
+    response_model=OkResponse[TokensDataResponse],
+    responses={
+        status.HTTP_200_OK: {"model": OkResponse[TokensDataResponse]},
+        status.HTTP_401_UNAUTHORIZED: {
+            "model": ErrorResponse[IncorrectUserCredentialsException]
+        },
+    },
+)
+async def login(
+    login_data: LoginUserRequestSchema,
+    user_service: Annotated[UserService, Depends(get_service_stub)],
+):
+    tokens = await user_service.check_valid_user(
+        user_credentials=LoginUserSchema(**login_data.model_dump())
+    )
+
+    return OkResponse(result=tokens)
+
+
+@user_routers.post(
+    "/refresh_token",
+    response_model=OkResponse[TokensDataResponse],
+    responses={
+        status.HTTP_200_OK: {"model": OkResponse[TokensDataResponse]},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse[InvalidTokenException]},
+    },
+)
+async def refresh_token(
+    jwt_manager: Annotated[JWTManager, Depends(jwt_manager_stub)],
+    auth_data: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())],
+):
+    tokens = jwt_manager.refresh_tokens(token=auth_data.credentials)
+
+    return OkResponse(result=tokens)
+
+
+@user_routers.get(
+    "/",
+    response_model=OkResponse[UsersResponseSchema],
+    responses={status.HTTP_200_OK: {"model": OkResponse[UsersResponseSchema]}},
+)
 async def get_users(
     user_service: Annotated[UserService, Depends(get_service_stub)],
     deleted: Annotated[bool | Empty, Query()] = Empty.UNSET,
@@ -60,42 +118,13 @@ async def get_users(
     return OkResponse(result=users)
 
 
-@user_routers.get("/me", response_model=OkResponse[FullUserResponseSchema])
-async def get_me(
-    token_payload: Annotated[CheckPermission, Depends(CheckPermission())],
-    user_service: Annotated[UserService, Depends(get_service_stub)],
-):
-    user_id = token_payload.get_user_payload().id
-
-    user = await user_service.get_user_by_id(user_id=user_id)
-
-    return OkResponse(result=user)
-
-
-@user_routers.post("/login", response_model=OkResponse[TokensDataResponse])
-async def login(
-    login_data: LoginUserRequestSchema,
-    user_service: Annotated[UserService, Depends(get_service_stub)],
-):
-    tokens = await user_service.check_valid_user(
-        user_credentials=LoginUserSchema(**login_data.model_dump())
-    )
-
-    return OkResponse(result=tokens)
-
-
-@user_routers.post("/refresh_token", response_model=OkResponse[TokensDataResponse])
-async def refresh_token(
-    jwt_manager: Annotated[JWTManager, Depends(jwt_manager_stub)],
-    auth_data: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())],
-):
-    tokens = jwt_manager.refresh_tokens(token=auth_data.credentials)
-
-    return OkResponse(result=tokens)
-
-
 @user_routers.get(
-    "/{user_id}/user_id", response_model=OkResponse[FullUserResponseSchema]
+    "/{user_id}",
+    response_model=OkResponse[FullUserResponseSchema],
+    responses={
+        status.HTTP_200_OK: {"model": OkResponse[FullUserResponseSchema]},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse[UserDoesNotExistException]},
+    },
 )
 async def get_user(
     user_id: uuid.UUID,
@@ -106,32 +135,62 @@ async def get_user(
     return OkResponse(result=user)
 
 
+@user_routers.get(
+    "/profile",
+    response_model=OkResponse[FullUserResponseSchema],
+    responses={
+        status.HTTP_200_OK: {"model": OkResponse[FullUserResponseSchema]},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse[UserDoesNotExistException]},
+    },
+)
+async def get_me(
+    token_payload: Annotated[CheckPermission, Depends(CheckPermission())],
+    user_service: Annotated[UserService, Depends(get_service_stub)],
+):
+    user_payload: UserPayload = token_payload.get_user_payload()
+
+    user = await user_service.get_user_by_id(user_id=user_payload.id)
+
+    return OkResponse(result=user)
+
+
 @user_routers.patch(
-    "/{user_id}",
-    response_model=OkResponse[dict],
-    dependencies=[Depends(CheckPermission())],
+    "/profile",
+    response_model=OkResponse[None],
+    responses={
+        status.HTTP_200_OK: {"model": OkResponse[None]},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse[InvalidTokenException]},
+        status.HTTP_409_CONFLICT: {"model": ErrorResponse[UserDataIsExistException]},
+    },
 )
 async def update_user(
-    user_id: uuid.UUID,
     update_user_data: UpdateUserRequestSchema,
     user_service: Annotated[UserService, Depends(get_service_stub)],
-) -> OkResponse[dict]:
+    token_payload: Annotated[CheckPermission, Depends(CheckPermission())],
+):
+    user_data: UserPayload = token_payload.get_user_payload()
     await user_service.update_user(
         update_user_data=UpdateUserSchema(
-            user_id=user_id, **update_user_data.model_dump()
+            user_id=user_data.id, **update_user_data.model_dump()
         )
     )
 
-    return OkResponse(message="Updated successfully!", result=dict(user_id=user_id))
+    return OkResponse(message="Updated successfully!")
 
 
 @user_routers.patch(
-    "/{user_id}/role",
-    response_model=OkResponse[dict],
+    "/role",
+    response_model=OkResponse[None],
+    responses={
+        status.HTTP_200_OK: {"model": OkResponse[None]},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse[InvalidTokenException]},
+        status.HTTP_409_CONFLICT: {"model": ErrorResponse[UserDataIsExistException]},
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse[AccessDeniedException]},
+    },
     dependencies=[Depends(CheckPermission(permission_list=[Roles.ADMIN]))],
 )
 async def update_user_role(
-    user_id: uuid.UUID,
+    user_id: Annotated[uuid.UUID, Query()],
     update_user_role_data: UpdateUserRoleRequestSchema,
     user_service: Annotated[UserService, Depends(get_service_stub)],
 ) -> OkResponse[dict]:
@@ -141,12 +200,17 @@ async def update_user_role(
         )
     )
 
-    return OkResponse(
-        message="Role updated successfully!", result=dict(user_id=user_id)
-    )
+    return OkResponse(message="Role updated successfully!")
 
 
-@user_routers.post("/", response_model=OkResponse[FullUserResponseSchema])
+@user_routers.post(
+    "/",
+    response_model=OkResponse[None],
+    responses={
+        status.HTTP_200_OK: {"model": OkResponse[None]},
+        status.HTTP_409_CONFLICT: {"model": ErrorResponse[UserDataIsExistException]},
+    },
+)
 async def create_user(
     create_user_data: CreateUserRequestSchema,
     user_service: Annotated[UserService, Depends(get_service_stub)],
@@ -159,34 +223,35 @@ async def create_user(
 
 
 @user_routers.delete(
-    "/{user_id}",
-    response_model=OkResponse[dict],
-    dependencies=[Depends(CheckPermission(permission_list=[Roles.USER]))],
+    "/profile",
+    response_model=OkResponse[None],
+    responses={
+        status.HTTP_200_OK: {"model": OkResponse[None]},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse[InvalidTokenException]},
+    },
 )
 async def delete_user(
-    user_id: uuid.UUID,
     user_service: Annotated[UserService, Depends(get_service_stub)],
+    token_payload: Annotated[CheckPermission, Depends(CheckPermission())],
 ):
-    await user_service.delete_user(user_id=user_id)
+    user_payload: UserPayload = token_payload.get_user_payload()
+    await user_service.delete_user(user_id=user_payload.id)
 
-    return OkResponse(message="User was deleted!", result=dict(user_id=user_id))
+    return OkResponse(message="User was deleted!")
 
 
-@user_routers.get("/@{username}", response_model=OkResponse[FullUserResponseSchema])
+@user_routers.get(
+    "/@{username}",
+    response_model=OkResponse[FullUserResponseSchema],
+    responses={
+        status.HTTP_200_OK: {"model": OkResponse[FullUserResponseSchema]},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse[UserDoesNotExistException]},
+    },
+)
 async def get_user_by_username(
     username: Annotated[str, Path()],
     user_service: Annotated[UserService, Depends(get_service_stub)],
 ):
     user = await user_service.get_user_by_username(username=username)
-
-    return OkResponse(result=user)
-
-
-@user_routers.get("/{email}", response_model=OkResponse[FullUserResponseSchema])
-async def get_user_by_email(
-    email: str,
-    user_service: Annotated[UserService, Depends(get_service_stub)],
-):
-    user = await user_service.get_user_by_email(email=email)
 
     return OkResponse(result=user)

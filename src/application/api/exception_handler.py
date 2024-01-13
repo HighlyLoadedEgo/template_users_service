@@ -59,7 +59,7 @@ async def app_error_handler(
     return await handle_error(
         request=request,
         err=err,
-        err_data=ErrorData(title=err.message, data=err),
+        err_data=ErrorData(message=err.message, data=err),
         status_code=status_code,
     )
 

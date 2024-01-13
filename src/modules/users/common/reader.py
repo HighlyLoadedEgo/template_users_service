@@ -20,14 +20,6 @@ class UserReader(ABC):
         """Get user by username from database."""
 
     @abstractmethod
-    async def get_user_by_email(self, email: str) -> User | None:
-        """Get user by email from database."""
-
-    @abstractmethod
-    async def get_user_by_phone(self, phone: str) -> User | None:
-        """Get user by phone from database."""
-
-    @abstractmethod
     async def get_users(
         self, filters: GetUserFiltersSchema, pagination: PaginationSchema
     ) -> ScalarResult[User]:

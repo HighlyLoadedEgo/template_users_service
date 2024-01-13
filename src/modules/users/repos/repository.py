@@ -11,10 +11,7 @@ from sqlalchemy.exc import DBAPIError
 from src.core.common.constants import Empty
 from src.core.database.exceptions import RepositoryException
 from src.modules.users.common.repository import UserRepository
-from src.modules.users.exceptions import (
-    UserDataIsExistException,
-    UserDoesNotExistException,
-)
+from src.modules.users.exceptions import UserDataIsExistException
 from src.modules.users.models import User
 from src.modules.users.schemas import (
     CreateUserSchema,
@@ -51,9 +48,6 @@ class UserRepositoryImpl(UserRepository):
         stmt = select(User).where(User.id == user_id)
 
         result = await self._session.scalar(stmt)
-
-        if not result:
-            raise UserDoesNotExistException()
 
         return result
 
@@ -98,6 +92,8 @@ class UserRepositoryImpl(UserRepository):
         if error == UniqueViolationError:
             match data:
                 case CreateUserSchema() | UpdateUserSchema():
-                    raise UserDataIsExistException(data=data.username)
+                    raise UserDataIsExistException(
+                        creation_data=err.args[0].split(":  ")[-1]
+                    )
         else:
             raise RepositoryException() from err
