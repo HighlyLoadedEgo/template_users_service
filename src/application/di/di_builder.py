@@ -21,6 +21,6 @@ def build_di(app: FastAPI, config: Settings) -> None:
     )
     jwt_manager = JWTManagerImpl(config=config.jwt)
 
-    app.dependency_overrides[get_service_stub] = get_user_service
-    app.dependency_overrides[user_uow_stub] = user_uow_provider.user_uow
-    app.dependency_overrides[jwt_manager_stub] = lambda: jwt_manager
+    app.dependency_overrides[get_service_stub] = get_user_service  # type: ignore
+    app.dependency_overrides[user_uow_stub] = user_uow_provider.user_uow  # type: ignore
+    app.dependency_overrides[jwt_manager_stub] = lambda: jwt_manager  # type: ignore

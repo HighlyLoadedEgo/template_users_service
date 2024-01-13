@@ -4,7 +4,6 @@ import uuid
 from pydantic import (
     BaseModel,
     EmailStr,
-    field_serializer,
 )
 
 from src.core.common.constants import Empty
@@ -22,11 +21,6 @@ class FullUserResponseSchema(BaseModel):
     is_deleted: bool
     created_at: datetime.datetime
     updated_at: datetime.datetime | None
-
-    @field_serializer("id")
-    @classmethod
-    def set(cls, id_: uuid.UUID) -> str:
-        return str(id_) + "qwe"
 
 
 class UsersResponseSchema(BaseModel):

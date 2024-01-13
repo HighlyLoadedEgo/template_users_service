@@ -6,8 +6,8 @@ from src.application.api.config import (
     ServerConfig,
 )
 from src.application.api.exception_handler import setup_exception_handlers
+from src.application.api.swagger import init_swagger_endpoints
 from src.application.middlewares.main import init_middlewares
-from src.application.swagger import init_swagger_endpoints
 
 
 def init_app(app_config: AppConfig) -> FastAPI:

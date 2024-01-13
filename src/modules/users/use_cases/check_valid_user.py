@@ -21,7 +21,7 @@ class CheckValidUserUseCase(UseCase):
             username=user_credentials.username
         )
 
-        if user is None:
+        if not user:
             raise IncorrectUserCredentialsException()
 
         password_verified = verify_password_hash(
