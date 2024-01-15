@@ -18,10 +18,7 @@ from src.core.auth import (
     UserPayload,
 )
 from src.core.auth.common.jwt import JWTManager
-from src.core.auth.exceptions import (
-    AccessDeniedException,
-    InvalidTokenException,
-)
+from src.core.auth.exceptions import InvalidTokenException
 from src.core.auth.permission import CheckPermission
 from src.core.auth.stubs import jwt_manager_stub
 from src.core.common.constants import Empty
@@ -47,7 +44,6 @@ from src.modules.users.schemas.requests_schemas import (
     CreateUserRequestSchema,
     LoginUserRequestSchema,
     UpdateUserRequestSchema,
-    UpdateUserRoleRequestSchema,
 )
 from src.modules.users.schemas.responses_schemas import (
     FullUserResponseSchema,
@@ -98,12 +94,13 @@ async def refresh_token(
 
 
 @user_routers.get(
-    "/",
+    "",
     response_model=OkResponse[UsersResponseSchema],
     responses={status.HTTP_200_OK: {"model": OkResponse[UsersResponseSchema]}},
 )
 async def get_users(
     user_service: Annotated[UserService, Depends(get_service_stub)],
+    username: Annotated[str | Empty, Query()] = Empty.UNSET,
     deleted: Annotated[bool | Empty, Query()] = Empty.UNSET,
     role: Annotated[Roles | Empty, Query()] = Empty.UNSET,
     order: Annotated[SortOrder, Query()] = SortOrder.ASC,
@@ -111,7 +108,7 @@ async def get_users(
     offset: Annotated[int, Query(ge=0)] = 0,
 ):
     users = await user_service.get_users(
-        filters=GetUserFiltersSchema(role=role, deleted=deleted),
+        filters=GetUserFiltersSchema(role=role, deleted=deleted, username=username),
         pagination=PaginationSchema(offset=offset, limit=limit, order=order),
     )
 
@@ -127,7 +124,7 @@ async def get_users(
     },
 )
 async def get_user(
-    user_id: uuid.UUID,
+    user_id: Annotated[uuid.UUID, Path()],
     user_service: Annotated[UserService, Depends(get_service_stub)],
 ):
     user = await user_service.get_user_by_id(user_id=user_id)
@@ -143,7 +140,7 @@ async def get_user(
         status.HTTP_404_NOT_FOUND: {"model": ErrorResponse[UserDoesNotExistException]},
     },
 )
-async def get_me(
+async def get_profile(
     token_payload: Annotated[CheckPermission, Depends(CheckPermission())],
     user_service: Annotated[UserService, Depends(get_service_stub)],
 ):
@@ -155,7 +152,7 @@ async def get_me(
 
 
 @user_routers.patch(
-    "/profile",
+    "",
     response_model=OkResponse[None],
     responses={
         status.HTTP_200_OK: {"model": OkResponse[None]},
@@ -178,36 +175,11 @@ async def update_user(
     return OkResponse(message="Updated successfully!")
 
 
-@user_routers.patch(
-    "/role",
-    response_model=OkResponse[None],
-    responses={
-        status.HTTP_200_OK: {"model": OkResponse[None]},
-        status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse[InvalidTokenException]},
-        status.HTTP_409_CONFLICT: {"model": ErrorResponse[UserDataIsExistException]},
-        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse[AccessDeniedException]},
-    },
-    dependencies=[Depends(CheckPermission(permission_list=[Roles.ADMIN]))],
-)
-async def update_user_role(
-    user_id: Annotated[uuid.UUID, Query()],
-    update_user_role_data: UpdateUserRoleRequestSchema,
-    user_service: Annotated[UserService, Depends(get_service_stub)],
-) -> OkResponse[dict]:
-    await user_service.update_user(
-        update_user_data=UpdateUserSchema(
-            user_id=user_id, **update_user_role_data.model_dump()
-        )
-    )
-
-    return OkResponse(message="Role updated successfully!")
-
-
 @user_routers.post(
-    "/",
+    "",
     response_model=OkResponse[None],
     responses={
-        status.HTTP_200_OK: {"model": OkResponse[None]},
+        status.HTTP_201_CREATED: {"model": OkResponse[None]},
         status.HTTP_409_CONFLICT: {"model": ErrorResponse[UserDataIsExistException]},
     },
 )
@@ -223,7 +195,7 @@ async def create_user(
 
 
 @user_routers.delete(
-    "/profile",
+    "",
     response_model=OkResponse[None],
     responses={
         status.HTTP_200_OK: {"model": OkResponse[None]},
@@ -238,20 +210,3 @@ async def delete_user(
     await user_service.delete_user(user_id=user_payload.id)
 
     return OkResponse(message="User was deleted!")
-
-
-@user_routers.get(
-    "/@{username}",
-    response_model=OkResponse[FullUserResponseSchema],
-    responses={
-        status.HTTP_200_OK: {"model": OkResponse[FullUserResponseSchema]},
-        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse[UserDoesNotExistException]},
-    },
-)
-async def get_user_by_username(
-    username: Annotated[str, Path()],
-    user_service: Annotated[UserService, Depends(get_service_stub)],
-):
-    user = await user_service.get_user_by_username(username=username)
-
-    return OkResponse(result=user)

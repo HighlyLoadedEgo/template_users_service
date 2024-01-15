@@ -23,10 +23,19 @@ class FullUserResponseSchema(BaseModel):
     updated_at: datetime.datetime | None
 
 
+class SimpleUserResponseSchema(BaseModel):
+    """Response schema for simple data user."""
+
+    id: uuid.UUID
+    username: str
+    role: str
+    is_deleted: bool
+
+
 class UsersResponseSchema(BaseModel):
     """Response schema for get users endpoint."""
 
-    users: list[FullUserResponseSchema] | None
+    users: list[SimpleUserResponseSchema] | None
     total: int | None
     offset: int | Empty = Empty.UNSET
     limit: int | Empty = Empty.UNSET

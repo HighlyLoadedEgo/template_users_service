@@ -12,5 +12,6 @@ class CreateUserUseCase(UseCase):
         """Create user."""
         create_user_data.password = generate_password_hash(create_user_data.password)
 
-        async with self._uow as uow:
-            await uow.user_repository.create_user(create_user_data=create_user_data)
+        await self._uow.user_repository.create_user(create_user_data=create_user_data)
+
+        await self._uow.commit()

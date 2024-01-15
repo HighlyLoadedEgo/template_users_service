@@ -33,11 +33,6 @@ class UserService(Service):
             uow=self._uow, jwt_manager=self._jwt_manager
         )(user_credentials=user_credentials)
 
-    async def get_user_by_username(self, username: str) -> FullUserSchema:
-        return await use_cases.GetUserByUsernameUseCase(uow=self._uow)(
-            username=username
-        )
-
     async def get_user_by_id(self, user_id: UUID) -> FullUserSchema:
         return await use_cases.GetUserByIdUseCase(uow=self._uow)(user_id=user_id)
 

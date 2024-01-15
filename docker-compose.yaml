@@ -1,10 +1,57 @@
 version: "3.9"
 
 services:
+  api:
+    container_name: users.api
+    build:
+      context: .
+    restart: unless-stopped
+    environment:
+      - CONFIG_PATH=${CONFIG_PATH}
+    volumes:
+      - ./config:/app/config:ro
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - users.postgres.network
+    expose:
+      - ${EXPOSE_SERVER_PORT}
+    ports:
+      - ${EXPOSE_SERVER_PORT}:${SERVER_PORT}
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsSL http://localhost:${SERVER_PORT}/healthcheck" ]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
+
+  migration:
+    container_name: users.migration
+    build:
+      context: .
+    restart: on-failure
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - users.postgres.network
+    volumes:
+      - ./config:/app/config:ro
+      - ./alembic.ini:/app/alembic.ini:ro
+      - ./src:/app/src:ro
+      - ./migrations:/app/migrations:ro
+    environment:
+      - CONFIG_PATH=${CONFIG_PATH}
+    command: [ "python", "-m", "alembic", "upgrade", "head" ]
+
   database:
       container_name: users.database
-      image: postgres
-      restart: always
+      hostname: users.database
+      image: postgres:16-alpine
+      restart: unless-stopped
       environment:
         POSTGRES_USER: ${POSTGRES_USER}
         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -13,6 +60,20 @@ services:
       ports:
         - ${POSTGRES_PORT}:5432
       volumes:
-        - ${POSTGRES_PGDATA}
+        - users.postgres.data:${POSTGRES_PGDATA}:rw
+      networks:
+        - users.postgres.network
       env_file:
         - .env
+      healthcheck:
+        test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+        interval: 10s
+        timeout: 60s
+        retries: 5
+        start_period: 10s
+
+volumes:
+  users.postgres.data: {}
+
+networks:
+  users.postgres.network: {}

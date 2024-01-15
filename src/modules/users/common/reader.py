@@ -16,10 +16,6 @@ class UserReader(ABC):
         self._session = session
 
     @abstractmethod
-    async def get_user_by_username(self, username: str) -> User | None:
-        """Get user by username from database."""
-
-    @abstractmethod
     async def get_users(
         self, filters: GetUserFiltersSchema, pagination: PaginationSchema
     ) -> ScalarResult[User]:

@@ -14,5 +14,7 @@ class UpdateUserUseCase(UseCase):
 
         if not user:
             raise UserDoesNotExistException(search_data=update_user_data.user_id)
-        async with self._uow as uow:
-            await uow.user_repository.update_user(update_user_data=update_user_data)
+
+        await self._uow.user_repository.update_user(update_user_data=update_user_data)
+
+        await self._uow.commit()
