@@ -1,5 +1,3 @@
-from typing import Self
-
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,10 +15,7 @@ class SqlAlchemyUow(UoW):
     def get_session(self) -> AsyncSession:
         return self._session
 
-    async def __aenter__(self) -> Self:
-        return self
-
-    async def __aexit__(self, *args, **kwargs) -> None:
+    async def commit(self) -> None:
         try:
             await self._session.commit()
         except SQLAlchemyError as err:

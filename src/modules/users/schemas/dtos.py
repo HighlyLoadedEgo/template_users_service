@@ -60,6 +60,7 @@ class UsersSchema(BaseModel):
 class GetUserFiltersSchema(BaseModel):
     deleted: bool | Empty = Empty.UNSET
     role: Roles | Empty = Empty.UNSET
+    username: str | Empty = Empty.UNSET
 
 
 class UsersWithPaginationSchema(PaginationSchema):

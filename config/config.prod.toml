@@ -22,7 +22,6 @@ local = false
 doc_url = "/api/docs"
 openapi_url = "/api/openapi.json"
 redoc_url = "/api/redoc"
-doc_title = "docs"
 doc_password = "prod_admin"
 doc_username = "prod_admin"
 origins = ["*"]
