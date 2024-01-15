@@ -11,6 +11,7 @@ class DatabaseConfig(BaseModel):
     user: str = Field(default="USER")
     dbname: str = Field(default="DBNAME")
 
+    # TODO: property
     def db_url(self, async_: bool = True) -> str:
         if async_:
             return (

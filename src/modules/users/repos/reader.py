@@ -24,14 +24,15 @@ class UserReaderImpl(UserReader):
             filter_scope.append(User.is_deleted.is_(filters.deleted))
         if filters.role is not Empty.UNSET:
             filter_scope.append(User.role == filters.role)  # type: ignore
+        if filters.username is not Empty.UNSET:
+            filter_scope.append(User.username == filters.username)
 
         stmt = stmt.where(*filter_scope)
 
-        if pagination.order is not Empty.UNSET:
-            if pagination.order == SortOrder.ASC:
-                stmt.order_by(User.username.asc())
-            else:
-                stmt.order_by(User.username.desc())
+        if pagination.order == SortOrder.ASC:
+            stmt.order_by(User.username.asc())
+        else:
+            stmt.order_by(User.username.desc())
 
         stmt = stmt.limit(pagination.limit).offset(pagination.offset)
         result = await self._session.scalars(stmt)
@@ -41,14 +42,6 @@ class UserReaderImpl(UserReader):
     async def get_users_count(self) -> int | None:
         """Get users count."""
         stmt = select(func.count(1)).select_from(User)
-
-        result = await self._session.scalar(stmt)
-
-        return result
-
-    async def get_user_by_username(self, username: str) -> User | None:
-        """Get user by username from database."""
-        stmt = select(User).where(User.username == username)
 
         result = await self._session.scalar(stmt)
 

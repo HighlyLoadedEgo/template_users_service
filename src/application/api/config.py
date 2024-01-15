@@ -21,7 +21,6 @@ class AppConfig(BaseModel):
     doc_url: str = "/docs"
     openapi_url: str = "/openapi.json"
     redoc_url: str = "/redoc"
-    doc_title: str = "docs"
     doc_password: str = "admin"
     doc_username: str = "admin"
     origins: list[str] = ["*"]

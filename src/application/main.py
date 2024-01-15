@@ -4,10 +4,14 @@ from fastapi import FastAPI
 from src.application.api.config import (
     AppConfig,
     ServerConfig,
+    Settings,
 )
 from src.application.api.exception_handler import setup_exception_handlers
 from src.application.api.swagger import init_swagger_endpoints
+from src.application.di.di_builder import build_di
+from src.application.endpoints_init import init_endpoints
 from src.application.middlewares.main import init_middlewares
+from src.core.utils.config_loader import load_config
 
 
 def init_app(app_config: AppConfig) -> FastAPI:
@@ -21,12 +25,23 @@ def init_app(app_config: AppConfig) -> FastAPI:
     return app
 
 
-async def run_api(app: FastAPI, config: ServerConfig) -> None:
+async def run_api(app: FastAPI, server_config: ServerConfig) -> None:
     """Start the FastAPI application and uvicorn."""
     uvicorn_config = uvicorn.Config(
         app,
-        host=config.host,
-        port=config.port,
+        host=server_config.host,
+        port=server_config.port,
     )
     server = uvicorn.Server(uvicorn_config)
     await server.serve()
+
+
+async def main() -> None:
+    """Main entry point."""
+    config = load_config(config_type_model=Settings)
+
+    app = init_app(app_config=config.app)
+    build_di(app=app, config=config)
+    init_endpoints(app=app)
+
+    await run_api(server_config=config.server, app=app)
