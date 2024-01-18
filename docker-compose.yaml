@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   api:
-    container_name: api.api
+    container_name: users.api
     build:
       context: .
     restart: unless-stopped
@@ -29,7 +29,7 @@ services:
       start_period: 10s
 
   migration:
-    container_name: api.migration
+    container_name: users.migration
     build:
       context: .
     restart: on-failure
@@ -48,8 +48,8 @@ services:
     command: [ "python", "-m", "alembic", "upgrade", "head" ]
 
   database:
-      container_name: api.database
-      hostname: api.database
+      container_name: users.database
+      hostname: users.database
       image: postgres:16-alpine
       restart: unless-stopped
       environment:
