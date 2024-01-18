@@ -6,7 +6,7 @@ from pydantic import (
 from src.core.auth import Roles
 from src.core.common.constants import Empty
 from src.core.database.postgres.schemas import PaginationSchema
-from src.modules.users.schemas import GetUserFiltersSchema
+from src.modules.users.dtos import GetUserFiltersSchema
 
 
 class LoginUserRequestSchema(BaseModel):

@@ -12,28 +12,37 @@ from alembic.command import (
 from alembic.config import Config as AlembicConfig
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from pytest_factoryboy import register
+from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
-from testcontainers.postgres import PostgresContainer
+from sqlalchemy.orm import (
+    Session,
+    sessionmaker,
+)
+from testcontainers.postgres import PostgresContainer  # type: ignore
 
-# from src.application.di.providers.users.stubs import user_uow_stub
-from src.application.endpoints_init import init_endpoints
+from src.application.api.config import (
+    AppConfig,
+    Settings,
+)
+from src.application.di.di_builder import build_di
+from src.application.main import init_app
+from src.application.routers_init import init_routers
+from src.core.utils.config_loader import load_config
+from tests.integrinity.factories import postgres as postgres_factories
+from tests.integrinity.factories.postgres.base import BaseFactory
 
-# from src.application.api.config import Settings
-
-
-# from src.core.auth.stubs import jwt_manager_stub
-# from src.core.utils.config_loader import load_config
-
-# from src.modules.users.stubs import get_service_stub
+for pg_factory in postgres_factories.__registry_factories__:
+    register(pg_factory)
 
 
 @pytest.fixture(scope="session")
 def postgres_container() -> Generator[PostgresContainer, None, None]:
-    with PostgresContainer(port=5454) as postgres:
+    with PostgresContainer() as postgres:
         yield postgres
 
 
@@ -47,7 +56,7 @@ def postgres_async_url(postgres_container: PostgresContainer) -> str:
     return postgres_container.get_connection_url().replace("psycopg2", "asyncpg")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def alembic_config(postgres_url: str) -> AlembicConfig:
     alembic_cfg = AlembicConfig("alembic.ini")
     alembic_cfg.set_main_option("sqlalchemy.url", postgres_url)
@@ -61,35 +70,74 @@ def init_db_tables(alembic_config: AlembicConfig) -> Generator[None, None, None]
     downgrade(alembic_config, "base")
 
 
-@pytest_asyncio.fixture(scope="session")
-async def session_factory(
+@pytest.fixture
+def sync_session_factory(
+    postgres_url: str,
+) -> Generator[sessionmaker[Session], None, None]:
+    sync_engine = create_engine(postgres_url)
+    session_factory_: sessionmaker[Session] = sessionmaker(
+        sync_engine, autocommit=False, autoflush=False, expire_on_commit=False
+    )
+    yield session_factory_
+    sync_engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def async_session_factory(
     postgres_async_url: str,
 ) -> AsyncGenerator[async_sessionmaker[AsyncSession], None]:
     async_engine = create_async_engine(url=postgres_async_url)
     session_factory_: async_sessionmaker[AsyncSession] = async_sessionmaker(
-        engine=async_engine, autocommit=False, autoflush=False, expire_on_commit=False
+        async_engine, autocommit=False, autoflush=False, expire_on_commit=False
     )
     yield session_factory_
     await async_engine.dispose()
 
 
+@pytest.fixture
+def sync_session(
+    init_db_tables: None,
+    sync_session_factory: sessionmaker[Session],
+) -> Generator[Session, None, None]:
+    with sync_session_factory() as sync_session:
+        yield sync_session
+
+
 @pytest_asyncio.fixture
-async def async_session():
-    pass
+async def async_session(
+    init_db_tables: None,
+    async_session_factory: async_sessionmaker[AsyncSession],
+) -> AsyncGenerator[AsyncSession, None]:
+    async with async_session_factory() as async_session:
+        yield async_session
 
 
-@pytest.fixture(scope="session")
-def test_fastapi_app() -> FastAPI:
-    app = FastAPI()
-    init_endpoints(app=app)
-    # application_config = load_config(Settings)
+@pytest.fixture(autouse=True)
+def set_factory_session(sync_session: Session) -> None:
+    BaseFactory.set_session(sync_session)
 
-    # app.dependency_overrides[get_service_stub] = get_user_service
-    # app.dependency_overrides[user_uow_stub] = user_uow_provider.user_uow
-    # app.dependency_overrides[jwt_manager_stub] = lambda: jwt_manager
+
+@pytest.fixture
+def get_test_settings(postgres_async_url: str, postgres_url: str) -> Settings:
+    class DatabaseTestConfig:
+        @staticmethod
+        def db_url(async_: bool) -> str:
+            return postgres_async_url if async_ else postgres_url
+
+    settings = load_config(Settings)
+    settings.database = DatabaseTestConfig()  # type: ignore
+
+    return settings
+
+
+@pytest.fixture
+def test_fastapi_app(get_test_settings: Settings) -> FastAPI:
+    app = init_app(load_config(AppConfig, config_scope="app"))
+    build_di(config=get_test_settings, app=app)
+    init_routers(app=app)
     return app
 
 
-@pytest.fixture(scope="session")
-def client(test_fastapi_app: FastAPI) -> TestClient:
+@pytest.fixture
+def client(init_db_tables: None, test_fastapi_app: FastAPI) -> TestClient:
     return TestClient(test_fastapi_app)

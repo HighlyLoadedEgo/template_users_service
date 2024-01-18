@@ -16,7 +16,7 @@ from src.application.api.security.permission_check import check_doc_permission
 
 
 def init_swagger_endpoints(app: FastAPI, app_config: AppConfig) -> None:
-    """Initialize swagger endpoints with config."""
+    """Initialize swagger api with config."""
     permission_depends = check_doc_permission(app_config=app_config)
 
     async def get_swagger_documentation() -> HTMLResponse:

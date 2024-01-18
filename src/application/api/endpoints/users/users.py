@@ -13,6 +13,11 @@ from fastapi.security import (
     HTTPBearer,
 )
 
+from src.application.api.schemas.response_schemas.base_responses import (
+    ErrorResponse,
+    OkResponse,
+)
+from src.application.di.providers.users.stubs import get_service_stub
 from src.core.auth import (
     Roles,
     UserPayload,
@@ -22,40 +27,36 @@ from src.core.auth.exceptions import InvalidTokenException
 from src.core.auth.permission import CheckPermission
 from src.core.auth.stubs import jwt_manager_stub
 from src.core.common.constants import Empty
-from src.core.common.schemas.base_responses import (
-    ErrorResponse,
-    OkResponse,
-)
 from src.core.database.postgres.constants import SortOrder
 from src.core.database.postgres.schemas import PaginationSchema
 from src.modules.users import UserService
-from src.modules.users.exceptions import (
-    IncorrectUserCredentialsException,
-    UserDataIsExistException,
-    UserDoesNotExistException,
-)
-from src.modules.users.schemas import (
+from src.modules.users.dtos import (
     CreateUserSchema,
     GetUserFiltersSchema,
     LoginUserSchema,
     UpdateUserSchema,
 )
-from src.modules.users.schemas.requests_schemas import (
+from src.modules.users.exceptions import (
+    IncorrectUserCredentialsException,
+    UserDataIsExistException,
+    UserDoesNotExistException,
+)
+
+from ...schemas.request_schemas import (
     CreateUserRequestSchema,
     LoginUserRequestSchema,
     UpdateUserRequestSchema,
 )
-from src.modules.users.schemas.responses_schemas import (
+from ...schemas.response_schemas import (
     FullUserResponseSchema,
     TokensDataResponse,
     UsersResponseSchema,
 )
-from src.modules.users.stubs import get_service_stub
 
-user_routers = APIRouter(prefix="/users", tags=["User Endpoints"])
+user_router = APIRouter(prefix="/users", tags=["User Endpoints"])
 
 
-@user_routers.post(
+@user_router.post(
     "/login",
     response_model=OkResponse[TokensDataResponse],
     responses={
@@ -76,7 +77,7 @@ async def login(
     return OkResponse(result=tokens)
 
 
-@user_routers.post(
+@user_router.post(
     "/refresh_token",
     response_model=OkResponse[TokensDataResponse],
     responses={
@@ -93,7 +94,7 @@ async def refresh_token(
     return OkResponse(result=tokens)
 
 
-@user_routers.get(
+@user_router.get(
     "",
     response_model=OkResponse[UsersResponseSchema],
     responses={status.HTTP_200_OK: {"model": OkResponse[UsersResponseSchema]}},
@@ -115,7 +116,7 @@ async def get_users(
     return OkResponse(result=users)
 
 
-@user_routers.get(
+@user_router.get(
     "/{user_id}",
     response_model=OkResponse[FullUserResponseSchema],
     responses={
@@ -132,7 +133,7 @@ async def get_user(
     return OkResponse(result=user)
 
 
-@user_routers.get(
+@user_router.get(
     "/profile",
     response_model=OkResponse[FullUserResponseSchema],
     responses={
@@ -151,7 +152,7 @@ async def get_profile(
     return OkResponse(result=user)
 
 
-@user_routers.patch(
+@user_router.patch(
     "",
     response_model=OkResponse[None],
     responses={
@@ -175,7 +176,7 @@ async def update_user(
     return OkResponse(message="Updated successfully!")
 
 
-@user_routers.post(
+@user_router.post(
     "",
     response_model=OkResponse[None],
     responses={
@@ -194,7 +195,7 @@ async def create_user(
     return OkResponse(message="Done!")
 
 
-@user_routers.delete(
+@user_router.delete(
     "",
     response_model=OkResponse[None],
     responses={

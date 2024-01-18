@@ -1,5 +1,5 @@
 from src.core.common.interfaces.use_case import UseCase
-from src.modules.users.schemas import CreateUserSchema
+from src.modules.users.dtos import CreateUserSchema
 from src.modules.users.uow import UserUoW
 from src.modules.users.utils import generate_password_hash
 

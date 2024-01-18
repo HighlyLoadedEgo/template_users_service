@@ -1,8 +1,8 @@
 from uuid import UUID
 
 from src.core.common.interfaces.use_case import UseCase
+from src.modules.users.dtos import FullUserSchema
 from src.modules.users.exceptions import UserDoesNotExistException
-from src.modules.users.schemas import FullUserSchema
 from src.modules.users.uow import UserUoW
 
 

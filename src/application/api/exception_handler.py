@@ -8,16 +8,16 @@ from fastapi import FastAPI
 from starlette import status
 from starlette.requests import Request
 
-from src.application.api.responses.orjson import ORJSONResponseImpl
+from src.application.api.schemas.response_schemas.base_responses import (
+    ErrorData,
+    ErrorResponse,
+)
+from src.application.api.schemas.response_schemas.orjson import ORJSONResponseImpl
 from src.core.auth.exceptions import (
     AccessDeniedException,
     InvalidTokenException,
 )
 from src.core.common import BaseAppException
-from src.core.common.schemas.base_responses import (
-    ErrorData,
-    ErrorResponse,
-)
 from src.modules.users.exceptions import (
     IncorrectUserCredentialsException,
     UserDataIsExistException,

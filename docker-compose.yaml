@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   api:
-    container_name: users.api
+    container_name: api.api
     build:
       context: .
     restart: unless-stopped
@@ -22,14 +22,14 @@ services:
     env_file:
       - .env
     healthcheck:
-      test: [ "CMD-SHELL", "curl -fsSL http://localhost:${SERVER_PORT}/healthcheck" ]
+      test: [ "CMD-SHELL", "curl -fsSL http://localhost:${SERVER_PORT}/api/healthcheck" ]
       interval: 10s
       timeout: 60s
       retries: 5
       start_period: 10s
 
   migration:
-    container_name: users.migration
+    container_name: api.migration
     build:
       context: .
     restart: on-failure
@@ -48,8 +48,8 @@ services:
     command: [ "python", "-m", "alembic", "upgrade", "head" ]
 
   database:
-      container_name: users.database
-      hostname: users.database
+      container_name: api.database
+      hostname: api.database
       image: postgres:16-alpine
       restart: unless-stopped
       environment:
@@ -60,7 +60,7 @@ services:
       ports:
         - ${POSTGRES_PORT}:5432
       volumes:
-        - users.postgres.data:${POSTGRES_PGDATA}:rw
+        - api.postgres.data:${POSTGRES_PGDATA}:rw
       networks:
         - users.postgres.network
       env_file:

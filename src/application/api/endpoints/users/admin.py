@@ -8,20 +8,21 @@ from fastapi import (
     status,
 )
 
+from src.application.api.schemas.response_schemas.base_responses import (
+    ErrorResponse,
+    OkResponse,
+)
+from src.application.di.providers.users.stubs import get_service_stub
 from src.core.auth import Roles
 from src.core.auth.exceptions import (
     AccessDeniedException,
     InvalidTokenException,
 )
 from src.core.auth.permission import CheckPermission
-from src.core.common.schemas.base_responses import (
-    ErrorResponse,
-    OkResponse,
-)
 from src.modules.users import UserService
-from src.modules.users.schemas import UpdateUserSchema
-from src.modules.users.schemas.requests_schemas import UpdateUserRoleRequestSchema
-from src.modules.users.stubs import get_service_stub
+from src.modules.users.dtos import UpdateUserSchema
+
+from ...schemas.request_schemas import UpdateUserRoleRequestSchema
 
 admin_router = APIRouter(prefix="/admin/users", tags=["Users Admin Endpoints"])
 

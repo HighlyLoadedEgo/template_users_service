@@ -15,7 +15,7 @@ from src.core.database.postgres.mixins.date_mixin import DateMixin
 from src.core.database.postgres.models import Base
 
 
-class User(Base, DateMixin):
+class Users(Base, DateMixin):
     __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(

@@ -11,12 +11,12 @@ from sqlalchemy.exc import DBAPIError
 from src.core.common.constants import Empty
 from src.core.database.exceptions import RepositoryException
 from src.modules.users.common.repository import UserRepository
-from src.modules.users.exceptions import UserDataIsExistException
-from src.modules.users.models import User
-from src.modules.users.schemas import (
+from src.modules.users.dtos import (
     CreateUserSchema,
     UpdateUserSchema,
 )
+from src.modules.users.exceptions import UserDataIsExistException
+from src.modules.users.models import Users
 
 
 class UserRepositoryImpl(UserRepository):
@@ -29,13 +29,13 @@ class UserRepositoryImpl(UserRepository):
             optional_create_data.update({"phone": create_user_data.phone})
 
         stmt = (
-            insert(User)
+            insert(Users)
             .values(
                 username=create_user_data.username,
                 hashed_password=create_user_data.password,
                 **optional_create_data,
             )
-            .returning(User)
+            .returning(Users)
         )
 
         try:
@@ -43,9 +43,9 @@ class UserRepositoryImpl(UserRepository):
         except DBAPIError as err:
             self._parse_error(err=err, data=create_user_data)
 
-    async def get_user_by_id(self, user_id: UUID) -> User | None:
+    async def get_user_by_id(self, user_id: UUID) -> Users | None:
         """Get user by id from database."""
-        stmt = select(User).where(User.id == user_id)
+        stmt = select(Users).where(Users.id == user_id)
 
         result = await self._session.scalar(stmt)
 
@@ -59,10 +59,10 @@ class UserRepositoryImpl(UserRepository):
             if value is not Empty.UNSET and key != "user_id"
         }
         stmt = (
-            update(User)
+            update(Users)
             .values(**update_data)
-            .where(User.id == update_user_data.user_id)
-            .returning(User)
+            .where(Users.id == update_user_data.user_id)
+            .returning(Users)
         )
         try:
             await self._session.scalar(stmt)
@@ -72,10 +72,10 @@ class UserRepositoryImpl(UserRepository):
     async def delete_user(self, user_id: UUID) -> UUID | None:
         """Delete user from database."""
         stmt = (
-            update(User)
+            update(Users)
             .values(is_deleted=True)
-            .where(User.id == user_id)
-            .returning(User.id)
+            .where(Users.id == user_id)
+            .returning(Users.id)
         )
         result = await self._session.scalar(stmt)
 

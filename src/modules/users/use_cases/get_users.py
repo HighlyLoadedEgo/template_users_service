@@ -1,6 +1,6 @@
 from src.core.common.interfaces.use_case import UseCase
 from src.core.database.postgres.schemas import PaginationSchema
-from src.modules.users.schemas import (
+from src.modules.users.dtos import (
     GetUserFiltersSchema,
     UsersWithPaginationSchema,
 )

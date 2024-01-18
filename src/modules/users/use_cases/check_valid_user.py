@@ -4,8 +4,8 @@ from src.core.auth import (
 )
 from src.core.auth.common.jwt import JWTManager
 from src.core.common.interfaces.use_case import UseCase
+from src.modules.users.dtos import LoginUserSchema
 from src.modules.users.exceptions import IncorrectUserCredentialsException
-from src.modules.users.schemas import LoginUserSchema
 from src.modules.users.uow import UserUoW
 from src.modules.users.utils import verify_password_hash
 

@@ -11,4 +11,6 @@ def get_user_service(
     uow: UserUoW = Depends(user_uow_stub),
     jwt_manager: JWTManager = Depends(jwt_manager_stub),
 ) -> UserService:
+    """Return instance of the user service."""
+
     return UserService(uow=uow, jwt_manager=jwt_manager)

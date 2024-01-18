@@ -1,6 +1,6 @@
 from src.core.common.interfaces.use_case import UseCase
+from src.modules.users.dtos import UpdateUserSchema
 from src.modules.users.exceptions import UserDoesNotExistException
-from src.modules.users.schemas import UpdateUserSchema
 from src.modules.users.uow import UserUoW
 
 

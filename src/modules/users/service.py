@@ -5,7 +5,7 @@ from src.core.auth.common.jwt import JWTManager
 from src.core.common import Service
 from src.core.database.postgres.schemas import PaginationSchema
 from src.modules.users import use_cases
-from src.modules.users.schemas import (
+from src.modules.users.dtos import (
     CreateUserSchema,
     FullUserSchema,
     GetUserFiltersSchema,
