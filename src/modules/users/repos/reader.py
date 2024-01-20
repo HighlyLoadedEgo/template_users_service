@@ -34,7 +34,7 @@ class UserReaderImpl(UserReader):
         else:
             stmt.order_by(Users.username.desc())
 
-        stmt = stmt.limit(pagination.limit).offset(pagination.offset)
+        stmt = stmt.limit(pagination.limit).offset(pagination.limit * pagination.offset)
         result = await self._session.scalars(stmt)
 
         return result

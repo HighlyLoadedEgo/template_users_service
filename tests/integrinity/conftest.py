@@ -73,7 +73,7 @@ def init_db_tables(alembic_config: AlembicConfig) -> Generator[None, None, None]
 @pytest.fixture
 def sync_session_factory(
     postgres_url: str,
-) -> Generator[sessionmaker[Session], None, None]:
+) -> sessionmaker[Session]:
     sync_engine = create_engine(postgres_url)
     session_factory_: sessionmaker[Session] = sessionmaker(
         sync_engine, autocommit=False, autoflush=False, expire_on_commit=False
@@ -107,7 +107,7 @@ def sync_session(
 async def async_session(
     init_db_tables: None,
     async_session_factory: async_sessionmaker[AsyncSession],
-) -> AsyncGenerator[AsyncSession, None]:
+) -> AsyncSession:
     async with async_session_factory() as async_session:
         yield async_session
 

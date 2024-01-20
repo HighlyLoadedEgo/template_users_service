@@ -23,7 +23,7 @@ class UserDoesNotExistException(BaseAppException):
 
     @property
     def message(self) -> str:
-        return f"User with this {self.search_data} is not registered!"
+        return f"User with this data -> {self.search_data} is not registered!"
 
 
 class IncorrectUserCredentialsException(BaseAppException):

@@ -258,3 +258,4 @@ private.key
 public.key
 config/config.dev.toml
 config/config.prod.toml
+prof/
