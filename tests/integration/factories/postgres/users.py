@@ -6,7 +6,7 @@ from faker import Faker
 
 from src.core.auth import Roles
 from src.modules.users.models import Users
-from tests.integrinity.factories.postgres.base import BaseFactory
+from tests.integration.factories.postgres.base import BaseFactory
 
 fake = Faker("ru_RU")
 

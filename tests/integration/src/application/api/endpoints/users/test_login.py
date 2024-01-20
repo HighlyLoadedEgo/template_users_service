@@ -1,5 +1,3 @@
-import logging
-
 from src.modules.users.exceptions import IncorrectUserCredentialsException
 from src.modules.users.utils import generate_password_hash
 
@@ -47,4 +45,3 @@ def test_incorrect_login(users_factory, client):
     error_data = json_data.get("error")
 
     assert error_data.get("message") == IncorrectUserCredentialsException().message
-    logging.warning(error_data)

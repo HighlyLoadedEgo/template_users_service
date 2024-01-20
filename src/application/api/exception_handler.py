@@ -44,7 +44,7 @@ def setup_exception_handlers(app: FastAPI) -> None:
         AccessDeniedException, error_handler(status.HTTP_403_FORBIDDEN)
     )
     app.add_exception_handler(
-        InvalidTokenException, error_handler(status.HTTP_403_FORBIDDEN)
+        InvalidTokenException, error_handler(status.HTTP_401_UNAUTHORIZED)
     )
     app.add_exception_handler(Exception, unknown_exception_handler)
 

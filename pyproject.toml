@@ -18,7 +18,6 @@ bcrypt = "^4.1.2"
 asyncpg = "^0.29.0"
 orjson = "^3.9.10"
 pytest-spec = "^3.2.0"
-pytest-profiling = "^1.7.0"
 
 
 [tool.poetry.group.tools.dependencies]
@@ -41,6 +40,7 @@ pytest-factoryboy = "^2.6.0"
 pytest-sugar = "^0.9.7"
 pytest-cov = "^4.1.0"
 pytest-xdist = "^3.5.0"
+pytest-order = "^1.2.0"
 
 [build-system]
 requires = ["poetry-core"]

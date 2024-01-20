@@ -65,6 +65,7 @@ user_router = APIRouter(prefix="/users", tags=["User Endpoints"])
             "model": ErrorResponse[IncorrectUserCredentialsException]
         },
     },
+    status_code=status.HTTP_200_OK,
 )
 async def login(
     login_data: LoginUserRequestSchema,
@@ -84,6 +85,7 @@ async def login(
         status.HTTP_200_OK: {"model": OkResponse[TokensDataResponse]},
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse[InvalidTokenException]},
     },
+    status_code=status.HTTP_200_OK,
 )
 async def refresh_token(
     jwt_manager: Annotated[JWTManager, Depends(jwt_manager_stub)],
@@ -98,6 +100,7 @@ async def refresh_token(
     "",
     response_model=OkResponse[UsersResponseSchema],
     responses={status.HTTP_200_OK: {"model": OkResponse[UsersResponseSchema]}},
+    status_code=status.HTTP_200_OK,
 )
 async def get_users(
     user_service: Annotated[UserService, Depends(get_service_stub)],
@@ -123,6 +126,7 @@ async def get_users(
         status.HTTP_200_OK: {"model": OkResponse[FullUserResponseSchema]},
         status.HTTP_404_NOT_FOUND: {"model": ErrorResponse[UserDoesNotExistException]},
     },
+    status_code=status.HTTP_200_OK,
 )
 async def get_user(
     user_id: Annotated[uuid.UUID, Path()],
@@ -134,12 +138,13 @@ async def get_user(
 
 
 @user_router.get(
-    "/profile",
+    "/profile/",
     response_model=OkResponse[FullUserResponseSchema],
     responses={
         status.HTTP_200_OK: {"model": OkResponse[FullUserResponseSchema]},
         status.HTTP_404_NOT_FOUND: {"model": ErrorResponse[UserDoesNotExistException]},
     },
+    status_code=status.HTTP_200_OK,
 )
 async def get_profile(
     token_payload: Annotated[CheckPermission, Depends(CheckPermission())],
@@ -160,6 +165,7 @@ async def get_profile(
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse[InvalidTokenException]},
         status.HTTP_409_CONFLICT: {"model": ErrorResponse[UserDataIsExistException]},
     },
+    status_code=status.HTTP_200_OK,
 )
 async def update_user(
     update_user_data: UpdateUserRequestSchema,
@@ -173,7 +179,7 @@ async def update_user(
         )
     )
 
-    return OkResponse(message="Updated successfully!")
+    return OkResponse()
 
 
 @user_router.post(
@@ -183,6 +189,7 @@ async def update_user(
         status.HTTP_201_CREATED: {"model": OkResponse[None]},
         status.HTTP_409_CONFLICT: {"model": ErrorResponse[UserDataIsExistException]},
     },
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_user(
     create_user_data: CreateUserRequestSchema,
@@ -192,16 +199,17 @@ async def create_user(
         create_user_data=CreateUserSchema(**create_user_data.model_dump())
     )
 
-    return OkResponse(message="Done!")
+    return OkResponse(status=status.HTTP_201_CREATED)
 
 
 @user_router.delete(
     "",
-    response_model=OkResponse[None],
+    response_model=None,
     responses={
-        status.HTTP_200_OK: {"model": OkResponse[None]},
+        status.HTTP_204_NO_CONTENT: {"model": None},
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse[InvalidTokenException]},
     },
+    status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_user(
     user_service: Annotated[UserService, Depends(get_service_stub)],
@@ -209,5 +217,3 @@ async def delete_user(
 ):
     user_payload: UserPayload = token_payload.get_user_payload()
     await user_service.delete_user(user_id=user_payload.id)
-
-    return OkResponse(message="User was deleted!")

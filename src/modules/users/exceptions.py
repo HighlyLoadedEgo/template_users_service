@@ -8,11 +8,11 @@ from src.core.common import BaseAppException
 class UserDataIsExistException(BaseAppException):
     """Base exception for user"""
 
-    creation_data: str = "data"
+    attribute: str = "data"
 
     @property
     def message(self) -> str:
-        return f"User with '{self.creation_data}' is already registered!"
+        return f"User with '{self.attribute}' is already registered!"
 
 
 @dataclass(eq=True)

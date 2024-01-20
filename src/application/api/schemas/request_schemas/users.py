@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import (
     BaseModel,
     EmailStr,
@@ -36,10 +38,10 @@ class UpdateUserRequestSchema(BaseModel):
     username: str | Empty = Empty.UNSET
     email: EmailStr | Empty = Empty.UNSET
     phone: str | Empty = Empty.UNSET
-    password: str | Empty = Empty.UNSET
 
 
 class UpdateUserRoleRequestSchema(BaseModel):
     """Update users role requests schema."""
 
-    role: Roles | Empty = Empty.UNSET
+    user_id: uuid.UUID
+    role: Roles

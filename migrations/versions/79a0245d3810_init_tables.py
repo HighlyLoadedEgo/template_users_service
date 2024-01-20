@@ -1,8 +1,8 @@
 """init_tables
 
-Revision ID: fcf0564db27f
+Revision ID: 79a0245d3810
 Revises:
-Create Date: 2024-01-08 21:25:11.306356
+Create Date: 2024-01-20 23:56:08.676257
 
 """
 from typing import (
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "fcf0564db27f"
+revision: str = "79a0245d3810"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -35,10 +35,10 @@ def upgrade() -> None:
             "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
         ),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("email"),
-        sa.UniqueConstraint("phone"),
-        sa.UniqueConstraint("username"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_users")),
+        sa.UniqueConstraint("email", name=op.f("uq_users_email")),
+        sa.UniqueConstraint("phone", name=op.f("uq_users_phone")),
+        sa.UniqueConstraint("username", name=op.f("uq_users_username")),
     )
     # ### end Alembic commands ###
 

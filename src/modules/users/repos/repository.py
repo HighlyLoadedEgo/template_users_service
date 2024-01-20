@@ -1,3 +1,4 @@
+import re
 from uuid import UUID
 
 from asyncpg import UniqueViolationError  # type: ignore
@@ -92,8 +93,7 @@ class UserRepositoryImpl(UserRepository):
         if error == UniqueViolationError:
             match data:
                 case CreateUserSchema() | UpdateUserSchema():
-                    raise UserDataIsExistException(
-                        creation_data=err.args[0].split(":  ")[-1]
-                    )
+                    attribute = re.search(r"Key \((\w+)\)", err.args[0]).group(1)  # type: ignore
+                    raise UserDataIsExistException(attribute=attribute)
         else:
             raise RepositoryException() from err

@@ -41,7 +41,7 @@ class UserReaderImpl(UserReader):
 
     async def get_users_count(self) -> int | None:
         """Get users count."""
-        stmt = select(func.count(1)).select_from(Users)
+        stmt = select(func.count(1)).select_from(Users)  # type: ignore
 
         result = await self._session.scalar(stmt)
 

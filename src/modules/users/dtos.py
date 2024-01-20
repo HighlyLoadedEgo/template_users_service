@@ -47,7 +47,6 @@ class UpdateUserSchema(BaseModel):
     username: str | Empty = Empty.UNSET
     email: EmailStr | Empty = Empty.UNSET
     phone: str | Empty = Empty.UNSET
-    password: str | Empty = Empty.UNSET
     role: Roles | Empty = Empty.UNSET
 
 

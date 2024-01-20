@@ -32,9 +32,18 @@ from src.application.api.config import (
 from src.application.di.di_builder import build_di
 from src.application.main import init_app
 from src.application.routers_init import init_routers
+from src.core.auth.common.jwt import JWTManager
+from src.core.auth.config import JWTConfig
+from src.core.auth.constants import (
+    Roles,
+    TokenTypes,
+)
+from src.core.auth.jwt import JWTManagerImpl
 from src.core.utils.config_loader import load_config
-from tests.integrinity.factories import postgres as postgres_factories
-from tests.integrinity.factories.postgres.base import BaseFactory
+from src.modules.users.dtos import FullUserSchema
+from src.modules.users.utils import generate_password_hash
+from tests.integration.factories import postgres as postgres_factories
+from tests.integration.factories.postgres.base import BaseFactory
 
 for pg_factory in postgres_factories.__registry_factories__:
     register(pg_factory)
@@ -140,4 +149,34 @@ def test_fastapi_app(get_test_settings: Settings) -> FastAPI:
 
 @pytest.fixture
 def client(init_db_tables: None, test_fastapi_app: FastAPI) -> TestClient:
-    return TestClient(test_fastapi_app)
+    default_headers = {"Content-Type": "application/json"}
+    return TestClient(test_fastapi_app, headers=default_headers)
+
+
+@pytest.fixture
+def test_user(sync_session: Session, users_factory) -> FullUserSchema:
+    test_username = "test_username"
+    test_password = "<PASSWORD>"
+    test_hashed_password = generate_password_hash(password=test_password)
+    user = users_factory.create(
+        hashed_password=test_hashed_password, username=test_username, role=Roles.ADMIN
+    )
+
+    return FullUserSchema.model_validate(user)
+
+
+@pytest.fixture(scope="session")
+def jwt_manager() -> JWTManager:
+    jwt_config = load_config(JWTConfig, config_scope="jwt")
+    return JWTManagerImpl(jwt_config=jwt_config)
+
+
+@pytest.fixture
+def access_auth_headers(jwt_manager: JWTManager, test_user: FullUserSchema) -> dict:
+    token = jwt_manager._generate_token(
+        payload=dict(id=str(test_user.id), role=test_user.role),
+        type_=TokenTypes.ACCESS.value,
+    )
+    auth_headers = {"Authorization": f"Bearer {token}"}
+
+    return auth_headers
