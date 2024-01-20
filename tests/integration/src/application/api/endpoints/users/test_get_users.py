@@ -134,3 +134,32 @@ def test_get_no_one_users_with_filters(users_factory, client):
     assert result.get("limit") == limit
     assert result.get("offset") == offset
     assert result.get("order") == order
+
+
+def test_get_no_one_users_without_filters(client):
+    offset = 0
+    limit = 20
+    order = SortOrder.ASC.value
+
+    response = client.get(
+        "/api/users",
+        params={
+            "offset": offset,
+            "limit": limit,
+            "order": order,
+        },
+    )
+
+    assert response.status_code == 200
+
+    json_data = response.json()
+
+    assert json_data.get("status") == 200
+
+    result = json_data.get("result")
+
+    assert result.get("total") == 0
+    assert len(result.get("users")) == 0
+    assert result.get("limit") == limit
+    assert result.get("offset") == offset
+    assert result.get("order") == order

@@ -3,12 +3,13 @@ from abc import (
     abstractmethod,
 )
 
-from sqlalchemy import ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database.postgres.schemas import PaginationSchema
-from src.modules.users.dtos import GetUserFiltersSchema
-from src.modules.users.models import Users
+from src.modules.users.dtos import (
+    FullUserSchema,
+    GetUserFiltersSchema,
+)
 
 
 class UserReader(ABC):
@@ -18,7 +19,7 @@ class UserReader(ABC):
     @abstractmethod
     async def get_users(
         self, filters: GetUserFiltersSchema, pagination: PaginationSchema
-    ) -> ScalarResult[Users]:
+    ) -> list[FullUserSchema]:
         """Get users from database by filters."""
 
     @abstractmethod
@@ -26,5 +27,5 @@ class UserReader(ABC):
         """Get count of users."""
 
     @abstractmethod
-    async def get_user_by_username(self, username: str) -> Users | None:
+    async def get_user_by_username(self, username: str) -> FullUserSchema | None:
         """Get user by username."""

@@ -12,11 +12,11 @@ class GetUserByIdUseCase(UseCase):
 
     async def __call__(self, user_id: UUID) -> FullUserSchema:
         """Get a user by id."""
-        user = await self._uow.user_repository.get_user_by_id(user_id=user_id)
+        user: FullUserSchema | None = await self._uow.user_repository.get_user_by_id(
+            user_id=user_id
+        )
 
         if not user:
             raise UserDoesNotExistException(search_data=user_id)
 
-        full_user_data = FullUserSchema.model_validate(user)
-
-        return full_user_data
+        return user

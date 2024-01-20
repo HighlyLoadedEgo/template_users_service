@@ -14,6 +14,7 @@ from src.core.database.exceptions import RepositoryException
 from src.modules.users.common.repository import UserRepository
 from src.modules.users.dtos import (
     CreateUserSchema,
+    FullUserSchema,
     UpdateUserSchema,
 )
 from src.modules.users.exceptions import UserDataIsExistException
@@ -44,13 +45,14 @@ class UserRepositoryImpl(UserRepository):
         except DBAPIError as err:
             self._parse_error(err=err, data=create_user_data)
 
-    async def get_user_by_id(self, user_id: UUID) -> Users | None:
+    async def get_user_by_id(self, user_id: UUID) -> FullUserSchema | None:
         """Get user by id from database."""
         stmt = select(Users).where(Users.id == user_id)
 
         result = await self._session.scalar(stmt)
-
-        return result
+        if result:
+            return FullUserSchema.model_validate(result)
+        return None
 
     async def update_user(self, update_user_data: UpdateUserSchema) -> None:
         """Update user in database."""
@@ -70,17 +72,10 @@ class UserRepositoryImpl(UserRepository):
         except DBAPIError as err:
             self._parse_error(err=err, data=update_user_data)
 
-    async def delete_user(self, user_id: UUID) -> UUID | None:
+    async def delete_user(self, user_id: UUID) -> None:
         """Delete user from database."""
-        stmt = (
-            update(Users)
-            .values(is_deleted=True)
-            .where(Users.id == user_id)
-            .returning(Users.id)
-        )
-        result = await self._session.scalar(stmt)
-
-        return result
+        stmt = update(Users).values(is_deleted=True).where(Users.id == user_id)
+        await self._session.execute(stmt)
 
     @staticmethod
     def _parse_error(
