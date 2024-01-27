@@ -60,7 +60,7 @@ services:
       ports:
         - ${POSTGRES_PORT}:5432
       volumes:
-        - api.postgres.data:${POSTGRES_PGDATA}:rw
+        - users.postgres.data:${POSTGRES_PGDATA}:rw
       networks:
         - users.postgres.network
       env_file:

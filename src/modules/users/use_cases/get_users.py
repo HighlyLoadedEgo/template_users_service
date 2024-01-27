@@ -1,3 +1,5 @@
+import logging
+
 from src.core.common.interfaces.use_case import UseCase
 from src.core.database.postgres.schemas import PaginationSchema
 from src.modules.users.dtos import (
@@ -6,6 +8,8 @@ from src.modules.users.dtos import (
     UsersWithPaginationSchema,
 )
 from src.modules.users.uow import UserUoW
+
+logger = logging.getLogger(__name__)
 
 
 class GetUsersUseCase(UseCase):
@@ -21,6 +25,10 @@ class GetUsersUseCase(UseCase):
         )
 
         total_count_of_users = await self._uow.user_reader.get_users_count()
+
+        logger.info(
+            "Users got", extra={"user": users, "total_count": total_count_of_users}
+        )
 
         return UsersWithPaginationSchema(
             users=users,

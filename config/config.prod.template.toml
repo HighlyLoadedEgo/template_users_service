@@ -1,6 +1,8 @@
 [server]
 host = '0.0.0.0'
 port = 1337
+log_level = "DEBUG"
+json_format = false
 
 [database]
 host = "database"
@@ -25,3 +27,7 @@ redoc_url = "/api/redoc"
 doc_password = "prod_admin"
 doc_username = "prod_admin"
 origins = ["*"]
+
+[logging]
+level = "INFO"
+json_format = false

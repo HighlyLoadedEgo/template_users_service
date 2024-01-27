@@ -1,7 +1,10 @@
+import logging
+
 from pydantic import BaseModel
 
 from src.core.auth.config import JWTConfig
 from src.core.database import DatabaseConfig
+from src.core.log.config import LoggerConfig
 
 
 class ServerConfig(BaseModel):
@@ -9,6 +12,8 @@ class ServerConfig(BaseModel):
 
     host: str = "127.0.0.1"
     port: int = 8000
+    log_level: str | int = logging.DEBUG
+    json_format: bool = False
 
 
 class AppConfig(BaseModel):
@@ -33,3 +38,4 @@ class Settings(BaseModel):
     database: DatabaseConfig
     jwt: JWTConfig
     app: AppConfig
+    logging: LoggerConfig

@@ -31,7 +31,6 @@ from src.application.api.config import (
 )
 from src.application.di.di_builder import build_di
 from src.application.main import init_app
-from src.application.routers_init import init_routers
 from src.core.auth.common.jwt import JWTManager
 from src.core.auth.config import JWTConfig
 from src.core.auth.constants import (
@@ -143,7 +142,6 @@ def get_test_settings(postgres_async_url: str, postgres_url: str) -> Settings:
 def test_fastapi_app(get_test_settings: Settings) -> FastAPI:
     app = init_app(load_config(AppConfig, config_scope="app"))
     build_di(config=get_test_settings, app=app)
-    init_routers(app=app)
     return app
 
 

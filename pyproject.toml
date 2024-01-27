@@ -18,6 +18,7 @@ bcrypt = "^4.1.2"
 asyncpg = "^0.29.0"
 orjson = "^3.9.10"
 pytest-spec = "^3.2.0"
+structlog = "^24.1.0"
 
 
 [tool.poetry.group.tools.dependencies]

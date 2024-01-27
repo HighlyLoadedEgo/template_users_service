@@ -1,6 +1,8 @@
 [server]
 host = '127.0.0.1'
 port = 8000
+log_level = "DEBUG"
+json_format = false
 
 [database]
 host = "localhost"
@@ -25,3 +27,7 @@ redoc_url = "/redoc"
 doc_password = "admin"
 doc_username = "admin"
 origins = ["*"]
+
+[logging]
+level = "INFO"
+json_format = false

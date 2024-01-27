@@ -11,6 +11,8 @@ from src.application.api.swagger import init_swagger_endpoints
 from src.application.di.di_builder import build_di
 from src.application.middlewares.main import init_middlewares
 from src.application.routers_init import init_routers
+from src.application.uvicorn_log.main import build_uvicorn_log_config
+from src.core.log.main import configure_logger
 from src.core.utils.config_loader import load_config
 
 
@@ -22,15 +24,20 @@ def init_app(app_config: AppConfig) -> FastAPI:
     init_swagger_endpoints(app=app, app_config=app_config)
     init_middlewares(app=app, app_config=app_config)
     setup_exception_handlers(app=app)
+    init_routers(app=app)
+
     return app
 
 
 async def run_api(app: FastAPI, server_config: ServerConfig) -> None:
-    """Start the FastAPI application and uvicorn."""
+    """Start the FastAPI application and Uvicorn."""
+    log_config = build_uvicorn_log_config(server_config=server_config)
     uvicorn_config = uvicorn.Config(
         app,
         host=server_config.host,
         port=server_config.port,
+        log_config=log_config,
+        use_colors=True,
     )
     server = uvicorn.Server(uvicorn_config)
     await server.serve()
@@ -39,9 +46,8 @@ async def run_api(app: FastAPI, server_config: ServerConfig) -> None:
 async def main() -> None:
     """Main entry point."""
     config = load_config(config_type_model=Settings)
-
+    configure_logger(logger_config=config.logging)
     app = init_app(app_config=config.app)
     build_di(app=app, config=config)
-    init_routers(app=app)
 
     await run_api(server_config=config.server, app=app)
