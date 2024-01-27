@@ -159,9 +159,9 @@ async def get_profile(
 
 @user_router.patch(
     "",
-    response_model=OkResponse[None],
+    response_model=OkResponse,
     responses={
-        status.HTTP_200_OK: {"model": OkResponse[None]},
+        status.HTTP_200_OK: {"model": OkResponse},
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse[InvalidTokenException]},
         status.HTTP_409_CONFLICT: {"model": ErrorResponse[UserDataIsExistException]},
     },
@@ -184,9 +184,9 @@ async def update_user(
 
 @user_router.post(
     "",
-    response_model=OkResponse[None],
+    response_model=OkResponse,
     responses={
-        status.HTTP_201_CREATED: {"model": OkResponse[None]},
+        status.HTTP_201_CREATED: {"model": OkResponse},
         status.HTTP_409_CONFLICT: {"model": ErrorResponse[UserDataIsExistException]},
     },
     status_code=status.HTTP_201_CREATED,
