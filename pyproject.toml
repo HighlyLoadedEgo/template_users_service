@@ -20,6 +20,7 @@ orjson = "^3.9.10"
 pytest-spec = "^3.2.0"
 structlog = "^24.1.0"
 uuid6 = "^2024.1.12"
+prometheus-client = "^0.19.0"
 
 
 [tool.poetry.group.tools.dependencies]

@@ -20,4 +20,4 @@ inputs = ["json"]
 encoding.codec = "json"
 labels.event = "log"
 labels.container_name = "{{container_name}}"
-endpoint = "http://user_service.loki:3100"
+endpoint = "http://users.loki:3100"

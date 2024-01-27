@@ -114,6 +114,8 @@ services:
       - VIRTUAL_HOST=users.grafana
       - NETWORK_ACCESS=internal
       - VIRTUAL_PORT=3000
+    depends_on:
+      - prometheus
 
   loki:
     image: grafana/loki:2.8.2
@@ -145,6 +147,23 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus:/etc/prometheus/
+    container_name: users.prometheus
+    hostname: users.prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - ${PROMETHEUS_PORT}:${PROMETHEUS_PORT}
+    restart: unless-stopped
+    environment:
+      TZ: ${PROMETHEUS_TIMEZONE}
+    networks:
+      - users.postgres.network
+      - users.grafana.network
 
 volumes:
   users.postgres.data: {}

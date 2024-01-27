@@ -9,6 +9,7 @@ from src.application.api.config import (
 from src.application.api.exception_handler import setup_exception_handlers
 from src.application.api.swagger import init_swagger_endpoints
 from src.application.di.di_builder import build_di
+from src.application.metrics_init import init_metrics
 from src.application.middlewares.main import init_middlewares
 from src.application.routers_init import init_routers
 from src.application.uvicorn_log.main import build_uvicorn_log_config
@@ -25,6 +26,7 @@ def init_app(app_config: AppConfig) -> FastAPI:
     init_middlewares(app=app, app_config=app_config)
     setup_exception_handlers(app=app)
     init_routers(app=app)
+    init_metrics(app=app)
 
     return app
 
