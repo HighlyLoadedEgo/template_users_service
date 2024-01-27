@@ -3,7 +3,10 @@ from uuid import UUID
 
 import orjson
 import pydantic
+import structlog
 from fastapi.responses import ORJSONResponse as _ORJSONResponse
+
+logger = structlog.stdlib.get_logger(__name__)
 
 
 def additionally_serialize(obj: Any) -> Any:
@@ -16,7 +19,9 @@ def additionally_serialize(obj: Any) -> Any:
         case pydantic.BaseModel():
             return obj.model_dump()
 
-    # log.warning("Type is not JSON serializable: %s", type(obj), extra={"obj": repr(obj)})
+    logger.warning(
+        "Type is not JSON serializable: %s", obj_type=type(obj), obj=repr(obj)
+    )
     return repr(obj)
 
 

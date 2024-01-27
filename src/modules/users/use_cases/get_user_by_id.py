@@ -1,9 +1,13 @@
 from uuid import UUID
 
+import structlog
+
 from src.core.common.interfaces.use_case import UseCase
 from src.modules.users.dtos import FullUserSchema
 from src.modules.users.exceptions import UserDoesNotExistException
 from src.modules.users.uow import UserUoW
+
+logger = structlog.stdlib.get_logger(__name__)
 
 
 class GetUserByIdUseCase(UseCase):
@@ -18,5 +22,7 @@ class GetUserByIdUseCase(UseCase):
 
         if not user:
             raise UserDoesNotExistException(search_data=user_id)
+
+        logger.debug("Get user by id", user=user)
 
         return user

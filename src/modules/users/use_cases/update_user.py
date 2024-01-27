@@ -1,7 +1,11 @@
+import structlog
+
 from src.core.common.interfaces.use_case import UseCase
 from src.modules.users.dtos import UpdateUserSchema
 from src.modules.users.exceptions import UserDoesNotExistException
 from src.modules.users.uow import UserUoW
+
+logger = structlog.stdlib.get_logger(__name__)
 
 
 class UpdateUserUseCase(UseCase):
@@ -18,3 +22,7 @@ class UpdateUserUseCase(UseCase):
         await self._uow.user_repository.update_user(update_user_data=update_user_data)
 
         await self._uow.commit()
+
+        logger.info(
+            "User was successfully updated", user=user, update_data=update_user_data
+        )

@@ -1,3 +1,5 @@
+import structlog
+
 from src.core.auth import (
     TokensData,
     UserPayload,
@@ -8,6 +10,8 @@ from src.modules.users.dtos import LoginUserSchema
 from src.modules.users.exceptions import IncorrectUserCredentialsException
 from src.modules.users.uow import UserUoW
 from src.modules.users.utils import verify_password_hash
+
+logger = structlog.stdlib.get_logger(__name__)
 
 
 class CheckValidUserUseCase(UseCase):
@@ -35,5 +39,7 @@ class CheckValidUserUseCase(UseCase):
         token_data = self._jwt_manager.encode_token(
             payload=UserPayload.model_validate(user)
         )
+
+        logger.info("User verified", username=user.username)
 
         return token_data

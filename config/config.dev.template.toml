@@ -29,5 +29,5 @@ doc_username = "admin"
 origins = ["*"]
 
 [logging]
-level = "INFO"
+level = "DEBUG"
 json_format = false

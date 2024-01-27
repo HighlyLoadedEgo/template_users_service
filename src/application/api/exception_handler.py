@@ -4,6 +4,7 @@ from collections.abc import (
 )
 from functools import partial
 
+import structlog
 from fastapi import FastAPI
 from starlette import status
 from starlette.requests import Request
@@ -24,7 +25,7 @@ from src.modules.users.exceptions import (
     UserDoesNotExistException,
 )
 
-# log = logging.getLogger(__name__)
+logger = structlog.stdlib.get_logger(__name__)
 
 
 def setup_exception_handlers(app: FastAPI) -> None:
@@ -67,8 +68,8 @@ async def app_error_handler(
 async def unknown_exception_handler(
     request: Request, err: Exception
 ) -> ORJSONResponseImpl:
-    # log.error("Handle error", exc_info=err, extra={"error": err})
-    # log.exception("Unknown error occurred", exc_info=err, extra={"error": err})
+    logger.error("Handle error", error=err)
+    logger.exception("Unknown error occurred", error=err)
     return ORJSONResponseImpl(
         ErrorResponse(
             error=ErrorData(data=err), status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -82,5 +83,5 @@ async def handle_error(
     err_data: ErrorData,
     status_code: int,
 ) -> ORJSONResponseImpl:
-    # log.error("Handle error", exc_info=err, extra={"error": err})
+    logger.error("Handle error", error=err)
     return ORJSONResponseImpl(ErrorResponse(error=err_data, status=status_code))
