@@ -10,6 +10,8 @@ services:
       - CONFIG_PATH=${CONFIG_PATH}
     volumes:
       - ./config:/app/config:ro
+      - ./private.key:/app/private.key
+      - ./public.key:/app/public.key
     depends_on:
       database:
         condition: service_healthy
@@ -71,6 +73,25 @@ services:
         timeout: 60s
         retries: 5
         start_period: 10s
+
+  postgres_backup:
+    container_name: users.postgres_backup
+    image: prodrigestivill/postgres-backup-local:15-alpine
+    networks:
+      - users.postgres.network
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_HOST=database
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - BACKUP_DIR=/backups
+      - POSTGRES_EXTRA_OPTS=-Z6 --schema=public --blobs
+      - SCHEDULE=${POSTGRES_BACKUP_SCHEDULE}
+      - HEALTHCHECK_PORT=${PG_DUMP_HEALTHCHECK_PORT}
+    volumes:
+      - ${POSTGRES_BACKUP_DIR}:/backups
 
 volumes:
   users.postgres.data: {}
