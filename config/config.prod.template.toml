@@ -2,7 +2,7 @@
 host = '0.0.0.0'
 port = 1337
 log_level = "DEBUG"
-json_format = false
+json_format = true
 
 [database]
 host = "database"
@@ -30,7 +30,7 @@ origins = ["*"]
 
 [logging]
 level = "INFO"
-json_format = false
+json_format = true
 
 [broker]
 host = "localhost"

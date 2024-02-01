@@ -27,9 +27,9 @@ admin_router = APIRouter(prefix="/admin/users", tags=["Users Admin Endpoints"])
 
 @admin_router.patch(
     "/role/",
-    response_model=OkResponse[None],
+    response_model=OkResponse,
     responses={
-        status.HTTP_200_OK: {"model": OkResponse[None]},
+        status.HTTP_200_OK: {"model": OkResponse},
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse[InvalidTokenException]},
         status.HTTP_403_FORBIDDEN: {"model": ErrorResponse[AccessDeniedException]},
     },
