@@ -17,28 +17,17 @@ from src.core.auth.schemas import (
 
 
 class JWTManagerImpl(JWTManager):
-    def __init__(self, config: JWTConfig) -> None:
-        self._config = config
+    def __init__(self, jwt_config: JWTConfig) -> None:
+        self._jwt_config = jwt_config
 
     def encode_token(self, payload: UserPayload) -> TokensData:
-        iat = datetime.datetime.now(datetime.UTC)
         copy_payload: dict = payload.model_dump()
         access_jwt = self._generate_token(
             payload=copy_payload,
-            iat=iat,
-            exp=(
-                iat
-                + datetime.timedelta(minutes=self._config.access_token_expire_minutes)
-            ),
             type_=TokenTypes.ACCESS.value,
         )
         refresh_jwt = self._generate_token(
             payload=copy_payload,
-            iat=iat,
-            exp=(
-                iat
-                + datetime.timedelta(minutes=self._config.refresh_token_expire_minutes)
-            ),
             type_=TokenTypes.REFRESH.value,
         )
 
@@ -55,19 +44,23 @@ class JWTManagerImpl(JWTManager):
         refreshed_tokens = self.encode_token(UserPayload(**payload.model_dump()))
         return refreshed_tokens
 
-    def _generate_token(
-        self, payload: dict, iat: datetime.datetime, exp: datetime.datetime, type_: str
-    ) -> str:
+    def _generate_token(self, payload: dict, type_: str) -> str:
+        iat = datetime.datetime.now(datetime.UTC)
+        exp = iat + datetime.timedelta(
+            minutes=self._jwt_config.access_token_expire_minutes
+        )
         payload.update({"iat": iat, "exp": exp, "type": type_})
 
         return jwt.encode(
-            payload, self._config.private_key, algorithm=self._config.algorithm
+            payload, self._jwt_config.private_key, algorithm=self._jwt_config.algorithm
         )
 
     def decode_token(self, token: str) -> TokenPayload:
         try:
             payload = jwt.decode(
-                token, self._config.public_key, algorithms=[self._config.algorithm]
+                token,
+                self._jwt_config.public_key,
+                algorithms=[self._jwt_config.algorithm],
             )
         except JWTError as err:
             raise InvalidTokenException() from err
