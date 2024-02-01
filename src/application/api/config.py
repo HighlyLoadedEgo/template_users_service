@@ -2,10 +2,6 @@ import logging
 
 from pydantic import BaseModel
 
-from src.core.auth.config import JWTConfig
-from src.core.database import DatabaseConfig
-from src.core.log.config import LoggerConfig
-
 
 class ServerConfig(BaseModel):
     """Model of the server configuration."""
@@ -29,13 +25,3 @@ class AppConfig(BaseModel):
     doc_password: str = "admin"
     doc_username: str = "admin"
     origins: list[str] = ["*"]
-
-
-class Settings(BaseModel):
-    """Compile all settings for this application."""
-
-    server: ServerConfig
-    database: DatabaseConfig
-    jwt: JWTConfig
-    app: AppConfig
-    logging: LoggerConfig

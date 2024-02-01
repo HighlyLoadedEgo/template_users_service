@@ -1,16 +1,12 @@
-import pytest
-
-from src.core.auth.constants import TokenTypes
+from src.core.auth import UserPayload
 from src.core.auth.exceptions import InvalidTokenException
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_correct_refresh_token(client, jwt_manager, test_user):
-    token = jwt_manager._generate_token(
-        payload=dict(id=str(test_user.id), role=test_user.role),
-        type_=TokenTypes.REFRESH.value,
+    token = jwt_manager.encode_token(
+        payload=UserPayload(id=str(test_user.id), role=test_user.role),
     )
-    auth_headers = {"Authorization": f"Bearer {token}"}
+    auth_headers = {"Authorization": f"Bearer {token.refresh_token}"}
 
     response = client.post(
         "/api/users/refresh_token",
@@ -30,7 +26,6 @@ def test_correct_refresh_token(client, jwt_manager, test_user):
     assert json_data.get("message") is None
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_incorrect_refresh_token(access_auth_headers, client):
     response = client.post(
         "/api/users/refresh_token",

@@ -1,7 +1,3 @@
-import pytest
-
-
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_profile(test_user, access_auth_headers, client):
     response = client.get(
         "/api/users/profile/",

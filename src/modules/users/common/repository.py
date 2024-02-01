@@ -30,5 +30,5 @@ class UserRepository(ABC):
         """Update user in database."""
 
     @abstractmethod
-    async def delete_user(self, user_id: UUID) -> None:
+    async def delete_user(self, user_id: UUID) -> FullUserSchema | None:
         """Delete user from database."""

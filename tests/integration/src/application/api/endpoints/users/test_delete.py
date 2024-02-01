@@ -1,10 +1,8 @@
-import pytest
 from sqlalchemy import select
 
 from src.modules.users.models import Users
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_delete_user(test_user, access_auth_headers, client, sync_session):
     response = client.delete(
         "/api/users",

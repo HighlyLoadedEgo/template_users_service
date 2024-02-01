@@ -1,6 +1,5 @@
 import uuid
 
-import pytest
 from sqlalchemy import select
 
 from src.core.auth import Roles
@@ -8,7 +7,6 @@ from src.modules.users.exceptions import UserDoesNotExistException
 from src.modules.users.models import Users
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_update_user_role(access_auth_headers, client, sync_session, users_factory):
     new_user = users_factory.create()
 
@@ -31,7 +29,6 @@ def test_update_user_role(access_auth_headers, client, sync_session, users_facto
     assert user_from_db.role == Roles.ADMIN
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_not_auth_update_user_role(access_auth_headers, client):
     test_uncreated_user_id = uuid.uuid4()
 

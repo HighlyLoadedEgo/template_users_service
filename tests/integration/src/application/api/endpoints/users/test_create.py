@@ -1,11 +1,9 @@
-import pytest
 from sqlalchemy import (
     func,
     select,
 )
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_create_user(client, sync_session):
     username = "test_user"
     password = "test_password"
@@ -34,7 +32,6 @@ def test_create_user(client, sync_session):
     assert users_count_in_db == 1
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_create_user_with_conflict_value(client, sync_session, users_factory):
     username = "test_user"
     password = "test_password"

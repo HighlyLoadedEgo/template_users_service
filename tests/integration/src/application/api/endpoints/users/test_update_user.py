@@ -1,10 +1,8 @@
-import pytest
 from sqlalchemy import select
 
 from src.modules.users.models import Users
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_update_all_user_updatable_fields(
     test_user, access_auth_headers, client, sync_session
 ):
@@ -33,7 +31,6 @@ def test_update_all_user_updatable_fields(
     assert user_from_db.phone == new_phone
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_update_all_user_one_field(
     test_user, access_auth_headers, client, sync_session
 ):

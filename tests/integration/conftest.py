@@ -12,6 +12,10 @@ from alembic.command import (
 from alembic.config import Config as AlembicConfig
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from faststream.rabbit import (
+    RabbitBroker,
+    TestRabbitBroker,
+)
 from pytest_factoryboy import register
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import (
@@ -24,20 +28,18 @@ from sqlalchemy.orm import (
     sessionmaker,
 )
 from testcontainers.postgres import PostgresContainer  # type: ignore
+from testcontainers.rabbitmq import RabbitMqContainer
 
-from src.application.api.config import (
-    AppConfig,
-    Settings,
-)
+from src.application.api.config import AppConfig
+from src.application.config import Settings
 from src.application.di.di_builder import build_di
 from src.application.main import init_app
+from src.core.auth import UserPayload
 from src.core.auth.common.jwt import JWTManager
 from src.core.auth.config import JWTConfig
-from src.core.auth.constants import (
-    Roles,
-    TokenTypes,
-)
+from src.core.auth.constants import Roles
 from src.core.auth.jwt import JWTManagerImpl
+from src.core.message_queue.config import BrokerConfig
 from src.core.utils.config_loader import load_config
 from src.modules.users.dtos import FullUserSchema
 from src.modules.users.utils import generate_password_hash
@@ -49,7 +51,24 @@ for pg_factory in postgres_factories.__registry_factories__:
 
 
 @pytest.fixture(scope="session")
-def postgres_container() -> Generator[PostgresContainer, None, None]:
+def rabbitmq_container() -> Generator[RabbitMqContainer, None, None]:
+    with RabbitMqContainer(port=6000) as rabbitmq:
+        yield rabbitmq
+
+
+@pytest.fixture(scope="session")
+def rabbitmq_config(rabbitmq_container: RabbitMqContainer) -> BrokerConfig:
+    # TODO: fix error logs when fixtrue start
+    return BrokerConfig(
+        host=rabbitmq_container.get_container_host_ip(),
+        port=rabbitmq_container.get_exposed_port(port=6000),
+        login=rabbitmq_container.RABBITMQ_DEFAULT_USER,
+        password=rabbitmq_container.RABBITMQ_DEFAULT_PASS,
+    )
+
+
+@pytest.fixture(scope="session")
+def postgres_container(rabbitmq_container) -> Generator[PostgresContainer, None, None]:
     with PostgresContainer() as postgres:
         yield postgres
 
@@ -126,29 +145,35 @@ def set_factory_session(sync_session: Session) -> None:
 
 
 @pytest.fixture
-def get_test_settings(postgres_async_url: str, postgres_url: str) -> Settings:
+def get_test_settings(
+    postgres_async_url: str, postgres_url: str, rabbitmq_config: BrokerConfig
+) -> Settings:
     class DatabaseTestConfig:
         @staticmethod
         def db_url(async_: bool) -> str:
             return postgres_async_url if async_ else postgres_url
 
     settings = load_config(Settings)
-    settings.database = DatabaseTestConfig()  # type: ignore
+    settings.database = DatabaseTestConfig()
+    settings.broker = rabbitmq_config
 
     return settings
 
 
-@pytest.fixture
-def test_fastapi_app(get_test_settings: Settings) -> FastAPI:
-    app = init_app(load_config(AppConfig, config_scope="app"))
-    build_di(config=get_test_settings, app=app)
-    return app
+@pytest_asyncio.fixture
+async def test_fastapi_app(
+    get_test_settings: Settings,
+) -> AsyncGenerator[FastAPI, None]:
+    broker = RabbitBroker(**get_test_settings.broker.model_dump())
+    async with TestRabbitBroker(broker=broker) as br:
+        app = init_app(load_config(AppConfig, config_scope="app"), lifespan=None)
+        build_di(config=get_test_settings, app=app, broker=br)
+        yield app
 
 
 @pytest.fixture
 def client(init_db_tables: None, test_fastapi_app: FastAPI) -> TestClient:
-    default_headers = {"Content-Type": "application/json"}
-    return TestClient(test_fastapi_app, headers=default_headers)
+    return TestClient(test_fastapi_app)
 
 
 @pytest.fixture
@@ -171,10 +196,9 @@ def jwt_manager() -> JWTManager:
 
 @pytest.fixture
 def access_auth_headers(jwt_manager: JWTManager, test_user: FullUserSchema) -> dict:
-    token = jwt_manager._generate_token(
-        payload=dict(id=str(test_user.id), role=test_user.role),
-        type_=TokenTypes.ACCESS.value,
+    token = jwt_manager.encode_token(
+        payload=UserPayload(id=str(test_user.id), role=test_user.role),
     )
-    auth_headers = {"Authorization": f"Bearer {token}"}
+    auth_headers = {"Authorization": f"Bearer {token.access_token}"}
 
     return auth_headers

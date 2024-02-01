@@ -9,6 +9,7 @@ from pydantic import (
 
 from src.core.auth import Roles
 from src.core.common.constants import Empty
+from src.core.common.dtos import BaseBrokerMessage
 from src.core.database.postgres.schemas import PaginationSchema
 
 
@@ -65,3 +66,7 @@ class GetUserFiltersSchema(BaseModel):
 class UsersWithPaginationSchema(PaginationSchema):
     users: list[FullUserSchema] | None
     total: int | None
+
+
+class BrokerMessageSchema(BaseBrokerMessage):
+    user_email: str

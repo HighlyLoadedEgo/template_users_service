@@ -1,13 +1,18 @@
+from typing import Any
+
+import structlog
 import uvicorn
 from fastapi import FastAPI
+from faststream.rabbit import RabbitBroker
 
 from src.application.api.config import (
     AppConfig,
     ServerConfig,
-    Settings,
 )
 from src.application.api.exception_handler import setup_exception_handlers
 from src.application.api.swagger import init_swagger_endpoints
+from src.application.broker_init import get_broker
+from src.application.config import Settings
 from src.application.di.di_builder import build_di
 from src.application.metrics_init import init_metrics
 from src.application.middlewares.main import init_middlewares
@@ -16,11 +21,17 @@ from src.application.uvicorn_log.main import build_uvicorn_log_config
 from src.core.log.main import configure_logger
 from src.core.utils.config_loader import load_config
 
+logger = structlog.stdlib.get_logger(__name__)
 
-def init_app(app_config: AppConfig) -> FastAPI:
+
+def init_app(app_config: AppConfig, lifespan: Any) -> FastAPI:
     """Initialize the FastAPI application with all dependencies."""
     app = FastAPI(
-        debug=app_config.debug, doc_url=None, openapi_url=None, redoc_url=None
+        debug=app_config.debug,
+        doc_url=None,
+        openapi_url=None,
+        redoc_url=None,
+        lifespan=lifespan,
     )
     init_swagger_endpoints(app=app, app_config=app_config)
     init_middlewares(app=app, app_config=app_config)
@@ -47,8 +58,10 @@ async def run_api(app: FastAPI, server_config: ServerConfig) -> None:
 async def main() -> None:
     """Main entry point."""
     config = load_config(config_type_model=Settings)
+    broker = RabbitBroker(**config.broker.model_dump(), logger=logger)  # type: ignore
+    lifespan = get_broker(broker=broker)
     configure_logger(logger_config=config.logging)
-    app = init_app(app_config=config.app)
-    build_di(app=app, config=config)
+    app = init_app(app_config=config.app, lifespan=lifespan)
+    build_di(app=app, config=config, broker=broker)
 
     await run_api(server_config=config.server, app=app)

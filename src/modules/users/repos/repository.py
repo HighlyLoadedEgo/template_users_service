@@ -72,10 +72,18 @@ class UserRepositoryImpl(UserRepository):
         except DBAPIError as err:
             self._parse_error(err=err, data=update_user_data)
 
-    async def delete_user(self, user_id: UUID) -> None:
+    async def delete_user(self, user_id: UUID) -> FullUserSchema | None:
         """Delete user from database."""
-        stmt = update(Users).values(is_deleted=True).where(Users.id == user_id)
-        await self._session.execute(stmt)
+        stmt = (
+            update(Users)
+            .values(is_deleted=True)
+            .where(Users.id == user_id)
+            .returning(Users)
+        )
+        result = await self._session.scalar(stmt)
+        if result:
+            return FullUserSchema.model_validate(result)
+        return None
 
     @staticmethod
     def _parse_error(
