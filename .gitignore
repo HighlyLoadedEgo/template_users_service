@@ -35,9 +35,9 @@
 # .idea/artifacts
 # .idea/compiler.xml
 # .idea/jarRepositories.xml
-# .idea/modules.xml
+# .idea/application.xml
 # .idea/*.iml
-# .idea/modules
+# .idea/application
 # *.iml
 # *.ipr
 
@@ -256,3 +256,6 @@ cython_debug/
 
 private.key
 public.key
+config/config.dev.toml
+config/config.prod.toml
+.backups

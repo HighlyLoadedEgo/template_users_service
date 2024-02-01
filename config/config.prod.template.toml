@@ -1,0 +1,39 @@
+[server]
+host = '0.0.0.0'
+port = 1337
+log_level = "DEBUG"
+json_format = true
+
+[database]
+host = "database"
+port = 5432
+password = "postgres"
+user = "postgres"
+dbname = "postgres"
+
+[jwt]
+algorithm = "RS256"
+access_token_expire_minutes = 60
+refresh_token_expire_minutes = 43200
+
+[app]
+debug = false
+title = "User service"
+version = "1.0.0"
+local = false
+doc_url = "/api/docs"
+openapi_url = "/api/openapi.json"
+redoc_url = "/api/redoc"
+doc_password = "prod_admin"
+doc_username = "prod_admin"
+origins = ["*"]
+
+[logging]
+level = "INFO"
+json_format = true
+
+[broker]
+host = "localhost"
+port = 5672
+login = "guest"
+password = "guest"

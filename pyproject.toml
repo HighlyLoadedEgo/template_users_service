@@ -17,6 +17,11 @@ psycopg2-binary = "^2.9.9"
 bcrypt = "^4.1.2"
 asyncpg = "^0.29.0"
 orjson = "^3.9.10"
+pytest-spec = "^3.2.0"
+structlog = "^24.1.0"
+uuid6 = "^2024.1.12"
+prometheus-client = "^0.19.0"
+faststream = {extras = ["rabbit"], version = "^0.3.14"}
 
 
 [tool.poetry.group.tools.dependencies]
@@ -32,9 +37,16 @@ isort = "^5.12.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
-testcontainers = {extras = ["postgres"], version = "^3.7.1"}
 pytest-asyncio = "^0.23.3"
 httpx = "^0.26.0"
+pytest-factoryboy = "^2.6.0"
+pytest-sugar = "^0.9.7"
+pytest-cov = "^4.1.0"
+pytest-xdist = "^3.5.0"
+pytest-order = "^1.2.0"
+testcontainers = "^3.7.1"
+pika = "^1.3.2"
+testcontainers-rabbitmq = "^0.0.1rc1"
 
 [build-system]
 requires = ["poetry-core"]

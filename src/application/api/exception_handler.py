@@ -4,27 +4,28 @@ from collections.abc import (
 )
 from functools import partial
 
+import structlog
 from fastapi import FastAPI
 from starlette import status
 from starlette.requests import Request
 
-from src.application.api.responses.orjson import ORJSONResponseImpl
+from src.application.api.schemas.response_schemas.base_responses import (
+    ErrorData,
+    ErrorResponse,
+)
+from src.application.api.schemas.response_schemas.orjson import ORJSONResponseImpl
 from src.core.auth.exceptions import (
     AccessDeniedException,
     InvalidTokenException,
 )
 from src.core.common import BaseAppException
-from src.core.common.schemas.base_responses import (
-    ErrorData,
-    ErrorResponse,
-)
 from src.modules.users.exceptions import (
     IncorrectUserCredentialsException,
     UserDataIsExistException,
     UserDoesNotExistException,
 )
 
-# logger = logging.getLogger(__name__)
+logger = structlog.stdlib.get_logger(__name__)
 
 
 def setup_exception_handlers(app: FastAPI) -> None:
@@ -44,7 +45,7 @@ def setup_exception_handlers(app: FastAPI) -> None:
         AccessDeniedException, error_handler(status.HTTP_403_FORBIDDEN)
     )
     app.add_exception_handler(
-        InvalidTokenException, error_handler(status.HTTP_403_FORBIDDEN)
+        InvalidTokenException, error_handler(status.HTTP_401_UNAUTHORIZED)
     )
     app.add_exception_handler(Exception, unknown_exception_handler)
 
@@ -67,8 +68,8 @@ async def app_error_handler(
 async def unknown_exception_handler(
     request: Request, err: Exception
 ) -> ORJSONResponseImpl:
-    # logger.error("Handle error", exc_info=err, extra={"error": err})
-    # logger.exception("Unknown error occurred", exc_info=err, extra={"error": err})
+    logger.error("Handle error", error=err)
+    logger.exception("Unknown error occurred", error=err)
     return ORJSONResponseImpl(
         ErrorResponse(
             error=ErrorData(data=err), status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -82,5 +83,5 @@ async def handle_error(
     err_data: ErrorData,
     status_code: int,
 ) -> ORJSONResponseImpl:
-    # logger.error("Handle error", exc_info=err, extra={"error": err})
+    logger.error("Handle error", error=err)
     return ORJSONResponseImpl(ErrorResponse(error=err_data, status=status_code))

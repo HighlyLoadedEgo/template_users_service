@@ -2,7 +2,6 @@ from abc import (
     ABC,
     abstractmethod,
 )
-from datetime import datetime
 
 from src.core.auth.schemas import (
     TokenPayload,
@@ -23,9 +22,7 @@ class JWTManager(ABC):
         """Refresh tokens using refresh token."""
 
     @abstractmethod
-    def _generate_token(
-        self, payload: dict, iat: datetime, exp: datetime, type_: str
-    ) -> str:
+    def _generate_token(self, payload: dict, type_: str) -> str:
         """Generate a JWT token."""
 
     @abstractmethod

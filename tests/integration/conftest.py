@@ -1,0 +1,204 @@
+from typing import (
+    AsyncGenerator,
+    Generator,
+)
+
+import pytest
+import pytest_asyncio
+from alembic.command import (
+    downgrade,
+    upgrade,
+)
+from alembic.config import Config as AlembicConfig
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from faststream.rabbit import (
+    RabbitBroker,
+    TestRabbitBroker,
+)
+from pytest_factoryboy import register
+from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.orm import (
+    Session,
+    sessionmaker,
+)
+from testcontainers.postgres import PostgresContainer  # type: ignore
+from testcontainers.rabbitmq import RabbitMqContainer
+
+from src.application.api.config import AppConfig
+from src.application.config import Settings
+from src.application.di.di_builder import build_di
+from src.application.main import init_app
+from src.core.auth import UserPayload
+from src.core.auth.common.jwt import JWTManager
+from src.core.auth.config import JWTConfig
+from src.core.auth.constants import Roles
+from src.core.auth.jwt import JWTManagerImpl
+from src.core.message_queue.config import BrokerConfig
+from src.core.utils.config_loader import load_config
+from src.modules.users.dtos import FullUserSchema
+from src.modules.users.utils import generate_password_hash
+from tests.integration.factories import postgres as postgres_factories
+from tests.integration.factories.postgres.base import BaseFactory
+
+for pg_factory in postgres_factories.__registry_factories__:
+    register(pg_factory)
+
+
+@pytest.fixture(scope="session")
+def rabbitmq_container() -> Generator[RabbitMqContainer, None, None]:
+    with RabbitMqContainer(port=6000) as rabbitmq:
+        yield rabbitmq
+
+
+@pytest.fixture(scope="session")
+def rabbitmq_config(rabbitmq_container: RabbitMqContainer) -> BrokerConfig:
+    # TODO: fix error logs when fixtrue start
+    return BrokerConfig(
+        host=rabbitmq_container.get_container_host_ip(),
+        port=rabbitmq_container.get_exposed_port(port=6000),
+        login=rabbitmq_container.RABBITMQ_DEFAULT_USER,
+        password=rabbitmq_container.RABBITMQ_DEFAULT_PASS,
+    )
+
+
+@pytest.fixture(scope="session")
+def postgres_container(rabbitmq_container) -> Generator[PostgresContainer, None, None]:
+    with PostgresContainer() as postgres:
+        yield postgres
+
+
+@pytest.fixture(scope="session")
+def postgres_url(postgres_container: PostgresContainer) -> str:
+    return postgres_container.get_connection_url()
+
+
+@pytest.fixture(scope="session")
+def postgres_async_url(postgres_container: PostgresContainer) -> str:
+    return postgres_container.get_connection_url().replace("psycopg2", "asyncpg")
+
+
+@pytest.fixture
+def alembic_config(postgres_url: str) -> AlembicConfig:
+    alembic_cfg = AlembicConfig("alembic.ini")
+    alembic_cfg.set_main_option("sqlalchemy.url", postgres_url)
+    return alembic_cfg
+
+
+@pytest.fixture
+def init_db_tables(alembic_config: AlembicConfig) -> Generator[None, None, None]:
+    upgrade(alembic_config, "head")
+    yield
+    downgrade(alembic_config, "base")
+
+
+@pytest.fixture
+def sync_session_factory(
+    postgres_url: str,
+) -> sessionmaker[Session]:
+    sync_engine = create_engine(postgres_url)
+    session_factory_: sessionmaker[Session] = sessionmaker(
+        sync_engine, autocommit=False, autoflush=False, expire_on_commit=False
+    )
+    yield session_factory_
+    sync_engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def async_session_factory(
+    postgres_async_url: str,
+) -> AsyncGenerator[async_sessionmaker[AsyncSession], None]:
+    async_engine = create_async_engine(url=postgres_async_url)
+    session_factory_: async_sessionmaker[AsyncSession] = async_sessionmaker(
+        async_engine, autocommit=False, autoflush=False, expire_on_commit=False
+    )
+    yield session_factory_
+    await async_engine.dispose()
+
+
+@pytest.fixture
+def sync_session(
+    init_db_tables: None,
+    sync_session_factory: sessionmaker[Session],
+) -> Generator[Session, None, None]:
+    with sync_session_factory() as sync_session:
+        yield sync_session
+
+
+@pytest_asyncio.fixture
+async def async_session(
+    init_db_tables: None,
+    async_session_factory: async_sessionmaker[AsyncSession],
+) -> AsyncSession:
+    async with async_session_factory() as async_session:
+        yield async_session
+
+
+@pytest.fixture(autouse=True)
+def set_factory_session(sync_session: Session) -> None:
+    BaseFactory.set_session(sync_session)
+
+
+@pytest.fixture
+def get_test_settings(
+    postgres_async_url: str, postgres_url: str, rabbitmq_config: BrokerConfig
+) -> Settings:
+    class DatabaseTestConfig:
+        @staticmethod
+        def db_url(async_: bool) -> str:
+            return postgres_async_url if async_ else postgres_url
+
+    settings = load_config(Settings)
+    settings.database = DatabaseTestConfig()
+    settings.broker = rabbitmq_config
+
+    return settings
+
+
+@pytest_asyncio.fixture
+async def test_fastapi_app(
+    get_test_settings: Settings,
+) -> AsyncGenerator[FastAPI, None]:
+    broker = RabbitBroker(**get_test_settings.broker.model_dump())
+    async with TestRabbitBroker(broker=broker) as br:
+        app = init_app(load_config(AppConfig, config_scope="app"), lifespan=None)
+        build_di(config=get_test_settings, app=app, broker=br)
+        yield app
+
+
+@pytest.fixture
+def client(init_db_tables: None, test_fastapi_app: FastAPI) -> TestClient:
+    return TestClient(test_fastapi_app)
+
+
+@pytest.fixture
+def test_user(sync_session: Session, users_factory) -> FullUserSchema:
+    test_username = "test_username"
+    test_password = "<PASSWORD>"
+    test_hashed_password = generate_password_hash(password=test_password)
+    user = users_factory.create(
+        hashed_password=test_hashed_password, username=test_username, role=Roles.ADMIN
+    )
+
+    return FullUserSchema.model_validate(user)
+
+
+@pytest.fixture(scope="session")
+def jwt_manager() -> JWTManager:
+    jwt_config = load_config(JWTConfig, config_scope="jwt")
+    return JWTManagerImpl(jwt_config=jwt_config)
+
+
+@pytest.fixture
+def access_auth_headers(jwt_manager: JWTManager, test_user: FullUserSchema) -> dict:
+    token = jwt_manager.encode_token(
+        payload=UserPayload(id=str(test_user.id), role=test_user.role),
+    )
+    auth_headers = {"Authorization": f"Bearer {token.access_token}"}
+
+    return auth_headers

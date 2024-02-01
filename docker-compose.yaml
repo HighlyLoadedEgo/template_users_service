@@ -10,6 +10,8 @@ services:
       - CONFIG_PATH=${CONFIG_PATH}
     volumes:
       - ./config:/app/config:ro
+      - ./private.key:/app/private.key
+      - ./public.key:/app/public.key
     depends_on:
       database:
         condition: service_healthy
@@ -22,7 +24,7 @@ services:
     env_file:
       - .env
     healthcheck:
-      test: [ "CMD-SHELL", "curl -fsSL http://localhost:${SERVER_PORT}/healthcheck" ]
+      test: [ "CMD-SHELL", "curl -fsSL http://localhost:${SERVER_PORT}/api/healthcheck" ]
       interval: 10s
       timeout: 60s
       retries: 5
@@ -72,8 +74,102 @@ services:
         retries: 5
         start_period: 10s
 
+  postgres_backup:
+    container_name: users.postgres_backup
+    image: prodrigestivill/postgres-backup-local:15-alpine
+    networks:
+      - users.postgres.network
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_HOST=database
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - BACKUP_DIR=/backups
+      - POSTGRES_EXTRA_OPTS=-Z6 --schema=public --blobs
+      - SCHEDULE=${POSTGRES_BACKUP_SCHEDULE}
+      - HEALTHCHECK_PORT=${PG_DUMP_HEALTHCHECK_PORT}
+    volumes:
+      - ${POSTGRES_BACKUP_DIR}:/backups
+
+  grafana:
+    image: grafana/grafana:9.5.2
+    container_name: users.grafana
+    hostname: users.grafana
+    restart: unless-stopped
+    expose:
+      - "3000"
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - users.grafana.network
+    volumes:
+      - users.grafana.data:/var/lib/grafana:rw
+      - ./grafana/provisioning:/etc/grafana/provisioning:rw
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - VIRTUAL_HOST=users.grafana
+      - NETWORK_ACCESS=internal
+      - VIRTUAL_PORT=3000
+    depends_on:
+      - prometheus
+
+  loki:
+    image: grafana/loki:2.8.2
+    container_name: users.loki
+    hostname: users.loki
+    expose:
+      - ${LOKI_EXPOSE_PORT}
+    volumes:
+      - ./loki/config.yaml:/etc/loki/config.yaml:ro
+      - users.loki.data:/tmp/:rw
+    command: -config.file=/etc/loki/config.yaml
+    restart: unless-stopped
+    networks:
+      - users.grafana.network
+
+  vector:
+    image: timberio/vector:0.29.1-alpine
+    container_name: users.vector
+    hostname: users.vector
+    restart: unless-stopped
+    expose:
+      - ${VECTOR_EXPOSE_PORT}
+    networks:
+      - users.grafana.network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./vector/vector.toml:/etc/vector/vector.toml:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus:/etc/prometheus/
+    container_name: users.prometheus
+    hostname: users.prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - ${PROMETHEUS_PORT}:${PROMETHEUS_PORT}
+    restart: unless-stopped
+    environment:
+      TZ: ${PROMETHEUS_TIMEZONE}
+    networks:
+      - users.postgres.network
+      - users.grafana.network
+
 volumes:
   users.postgres.data: {}
+  users.grafana.data: {}
+  users.loki.data: {}
 
 networks:
   users.postgres.network: {}
+  users.grafana.network: {}

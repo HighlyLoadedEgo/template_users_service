@@ -1,7 +1,6 @@
-from pydantic import BaseModel
+import logging
 
-from src.core.auth.config import JWTConfig
-from src.core.database import DatabaseConfig
+from pydantic import BaseModel
 
 
 class ServerConfig(BaseModel):
@@ -9,6 +8,8 @@ class ServerConfig(BaseModel):
 
     host: str = "127.0.0.1"
     port: int = 8000
+    log_level: str | int = logging.DEBUG
+    json_format: bool = False
 
 
 class AppConfig(BaseModel):
@@ -24,12 +25,3 @@ class AppConfig(BaseModel):
     doc_password: str = "admin"
     doc_username: str = "admin"
     origins: list[str] = ["*"]
-
-
-class Settings(BaseModel):
-    """Compile all settings for this application."""
-
-    server: ServerConfig
-    database: DatabaseConfig
-    jwt: JWTConfig
-    app: AppConfig

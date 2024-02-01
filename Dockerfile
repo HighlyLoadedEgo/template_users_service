@@ -32,6 +32,4 @@ RUN apt-get update && apt-get install -y curl
 
 WORKDIR app/
 COPY ./src /app/src
-COPY ./private.key .
-COPY ./public.key .
 CMD ["python", "-Om", "src"]

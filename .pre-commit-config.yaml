@@ -36,13 +36,13 @@ repos:
     hooks:
       - id: typos
 
-#  # Pytest
-#  - repo: local
-#    hooks:
-#      - id: tests
-#        name: run tests
-#        entry: pytest -v
-#        language: system
-#        always_run: true
-#        types: [ python ]
-#        stages: [ commit ]
+  # Pytest
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        language: system
+        entry: pytest
+        pass_filenames: false
+        always_run: true
+        stages: [ commit ]
