@@ -35,5 +35,5 @@ json_format = false
 [broker]
 host = "localhost"
 port = 5672
-login = "guest"
-password = "guest"
+login = "admin"
+password = "admin"
