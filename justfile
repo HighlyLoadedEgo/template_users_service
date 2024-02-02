@@ -24,4 +24,4 @@ downgrade VERSION='-1':
 
 # Run tests
 test ARGS='tests':
-    poetry run pytest {{ARGS}}
+    poetry run pytest -v --cov=src --cov-report=html --durations=10 --failed-first -n 4 {{ARGS}}
