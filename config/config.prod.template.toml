@@ -33,7 +33,7 @@ level = "INFO"
 json_format = true
 
 [broker]
-host = "localhost"
+host = "rabbitmq"
 port = 5672
-login = "guest"
-password = "guest"
+login = "admin"
+password = "admin"

@@ -2032,17 +2032,18 @@ docker = ">=4.0.0"
 wrapt = "*"
 
 [[package]]
-name = "testcontainers-rabbitmq"
+name = "testcontainers-postgres"
 version = "0.0.1rc1"
-description = "RabbitMQ component of testcontainers-python."
+description = "PostgreSQL component of testcontainers-python."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "testcontainers_rabbitmq-0.0.1rc1-py3-none-any.whl", hash = "sha256:86424439bf8486c1fb27857d52ff655d7d8fdc68b133802a4ebe07f20f638fc7"},
+    {file = "testcontainers_postgres-0.0.1rc1-py3-none-any.whl", hash = "sha256:1bd0afcff2c236c08ffbf3e4926e713d8c58e20df82c31e62fb9cca70582fd5a"},
 ]
 
 [package.dependencies]
-pika = "*"
+psycopg2-binary = "*"
+sqlalchemy = "*"
 testcontainers-core = "*"
 
 [[package]]
@@ -2328,4 +2329,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "a8be8a5305efd3881d48e21776be47224f42824fb5bd496245fe5848722cf1fc"
+content-hash = "2afc426c50164ce33ae93b716a96a194f28a4a8c55c7cb6a772de7077deb6440"

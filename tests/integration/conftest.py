@@ -28,7 +28,6 @@ from sqlalchemy.orm import (
     sessionmaker,
 )
 from testcontainers.postgres import PostgresContainer  # type: ignore
-from testcontainers.rabbitmq import RabbitMqContainer
 
 from src.application.api.config import AppConfig
 from src.application.config import Settings
@@ -39,7 +38,6 @@ from src.core.auth.common.jwt import JWTManager
 from src.core.auth.config import JWTConfig
 from src.core.auth.constants import Roles
 from src.core.auth.jwt import JWTManagerImpl
-from src.core.message_queue.config import BrokerConfig
 from src.core.utils.config_loader import load_config
 from src.modules.users.dtos import FullUserSchema
 from src.modules.users.utils import generate_password_hash
@@ -51,24 +49,7 @@ for pg_factory in postgres_factories.__registry_factories__:
 
 
 @pytest.fixture(scope="session")
-def rabbitmq_container() -> Generator[RabbitMqContainer, None, None]:
-    with RabbitMqContainer(port=6000) as rabbitmq:
-        yield rabbitmq
-
-
-@pytest.fixture(scope="session")
-def rabbitmq_config(rabbitmq_container: RabbitMqContainer) -> BrokerConfig:
-    # TODO: fix error logs when fixtrue start
-    return BrokerConfig(
-        host=rabbitmq_container.get_container_host_ip(),
-        port=rabbitmq_container.get_exposed_port(port=6000),
-        login=rabbitmq_container.RABBITMQ_DEFAULT_USER,
-        password=rabbitmq_container.RABBITMQ_DEFAULT_PASS,
-    )
-
-
-@pytest.fixture(scope="session")
-def postgres_container(rabbitmq_container) -> Generator[PostgresContainer, None, None]:
+def postgres_container() -> Generator[PostgresContainer, None, None]:
     with PostgresContainer() as postgres:
         yield postgres
 
@@ -145,9 +126,7 @@ def set_factory_session(sync_session: Session) -> None:
 
 
 @pytest.fixture
-def get_test_settings(
-    postgres_async_url: str, postgres_url: str, rabbitmq_config: BrokerConfig
-) -> Settings:
+def get_test_settings(postgres_async_url: str, postgres_url: str) -> Settings:
     class DatabaseTestConfig:
         @staticmethod
         def db_url(async_: bool) -> str:
@@ -155,7 +134,6 @@ def get_test_settings(
 
     settings = load_config(Settings)
     settings.database = DatabaseTestConfig()
-    settings.broker = rabbitmq_config
 
     return settings
 
@@ -164,7 +142,7 @@ def get_test_settings(
 async def test_fastapi_app(
     get_test_settings: Settings,
 ) -> AsyncGenerator[FastAPI, None]:
-    broker = RabbitBroker(**get_test_settings.broker.model_dump())
+    broker = RabbitBroker()
     async with TestRabbitBroker(broker=broker) as br:
         app = init_app(load_config(AppConfig, config_scope="app"), lifespan=None)
         build_di(config=get_test_settings, app=app, broker=br)

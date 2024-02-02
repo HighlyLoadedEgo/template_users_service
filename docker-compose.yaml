@@ -15,8 +15,11 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - users.postgres.network
+      - users.rabbitmq.network
     expose:
       - ${EXPOSE_SERVER_PORT}
     ports:
@@ -93,6 +96,28 @@ services:
     volumes:
       - ${POSTGRES_BACKUP_DIR}:/backups
 
+  rabbitmq:
+    image: rabbitmq:3.11-management-alpine
+    container_name: users.rabbitmq
+    hostname: users.rabbitmq
+    restart: unless-stopped
+    ports:
+      - ${RABBITMQ_PORT}:${RABBITMQ_PORT}
+      - ${RABBITMQ_UI_PORT}:${RABBITMQ_UI_PORT}
+    networks:
+      - users.rabbitmq.network
+    volumes:
+      - users.rabbitmq.data:/var/lib/rabbitmq/:rw
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics check_running -q"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
+
   grafana:
     image: grafana/grafana:9.5.2
     container_name: users.grafana
@@ -167,9 +192,11 @@ services:
 
 volumes:
   users.postgres.data: {}
+  users.rabbitmq.data: {}
   users.grafana.data: {}
   users.loki.data: {}
 
 networks:
   users.postgres.network: {}
   users.grafana.network: {}
+  users.rabbitmq.network: {}
