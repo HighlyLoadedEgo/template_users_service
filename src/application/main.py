@@ -11,7 +11,7 @@ from src.application.api.config import (
 )
 from src.application.api.exception_handler import setup_exception_handlers
 from src.application.api.swagger import init_swagger_endpoints
-from src.application.broker_init import get_broker
+from src.application.broker_init import get_lifespan
 from src.application.config import Settings
 from src.application.di.di_builder import build_di
 from src.application.metrics_init import init_metrics
@@ -59,7 +59,7 @@ async def main() -> None:
     """Main entry point."""
     config = load_config(config_type_model=Settings)
     broker = RabbitBroker(**config.broker.model_dump(), logger=logger)  # type: ignore
-    lifespan = get_broker(broker=broker)
+    lifespan = get_lifespan(broker=broker)
     configure_logger(logger_config=config.logging)
     app = init_app(app_config=config.app, lifespan=lifespan)
     build_di(app=app, config=config, broker=broker)

@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from faststream.rabbit import RabbitBroker
 
 
-def get_broker(broker: RabbitBroker):
+def get_lifespan(broker: RabbitBroker):
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         await broker.start()
