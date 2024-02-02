@@ -42,7 +42,7 @@ repos:
       - id: pytest
         name: pytest
         language: system
-        entry: pytest
+        entry: pytest -n 4
         pass_filenames: false
         always_run: true
         stages: [ commit ]
