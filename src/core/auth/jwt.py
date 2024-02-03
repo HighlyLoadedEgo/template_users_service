@@ -22,13 +22,23 @@ class JWTManagerImpl(JWTManager):
 
     def encode_token(self, payload: UserPayload) -> TokensData:
         copy_payload: dict = payload.model_dump()
+
+        iat = datetime.datetime.now(datetime.UTC)
+        access_exp = iat + datetime.timedelta(
+            minutes=self._jwt_config.access_token_expire_minutes
+        )
+        refresh_exp = iat + datetime.timedelta(
+            minutes=self._jwt_config.refresh_token_expire_minutes
+        )
+
         access_jwt = self._generate_token(
-            payload=copy_payload,
-            type_=TokenTypes.ACCESS.value,
+            payload=copy_payload, type_=TokenTypes.ACCESS.value, iat=iat, exp=access_exp
         )
         refresh_jwt = self._generate_token(
             payload=copy_payload,
             type_=TokenTypes.REFRESH.value,
+            iat=iat,
+            exp=refresh_exp,
         )
 
         return TokensData(
@@ -44,7 +54,9 @@ class JWTManagerImpl(JWTManager):
         refreshed_tokens = self.encode_token(UserPayload(**payload.model_dump()))
         return refreshed_tokens
 
-    def _generate_token(self, payload: dict, type_: str) -> str:
+    def _generate_token(
+        self, payload: dict, type_: str, iat: datetime.datetime, exp: datetime.datetime
+    ) -> str:
         iat = datetime.datetime.now(datetime.UTC)
         exp = iat + datetime.timedelta(
             minutes=self._jwt_config.access_token_expire_minutes
