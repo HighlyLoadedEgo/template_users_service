@@ -1,0 +1,54 @@
+name: Run tests
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install poetry
+        run: pipx install poetry
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+          cache: "poetry"
+          cache-dependency-path: poetry.lock
+      - name: Install dependencies
+        run: poetry install
+  lint:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install poetry
+        run: pipx install poetry
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+          cache: "poetry"
+          cache-dependency-path: poetry.lock
+      - name: Lint with pre-commit
+        run: poetry run pre-commit run --all-files
+# TODO: configure working with config and keys for jwt
+#  test:
+#    needs: build
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Install poetry
+#        run: pipx install poetry
+#      - name: Set up Python
+#        uses: actions/setup-python@v4
+#        with:
+#          python-version: "3.12"
+#          cache: "poetry"
+#          cache-dependency-path: poetry.lock
+#      - name: Test with pytest
+#        run: poetry run pytest

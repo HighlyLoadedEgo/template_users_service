@@ -35,14 +35,3 @@ repos:
     rev: v1.16.23
     hooks:
       - id: typos
-
-  # Pytest
-  - repo: local
-    hooks:
-      - id: pytest
-        name: pytest
-        language: system
-        entry: pytest -n 4
-        pass_filenames: false
-        always_run: true
-        stages: [ commit ]
