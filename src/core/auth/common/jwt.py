@@ -1,3 +1,4 @@
+import datetime
 from abc import (
     ABC,
     abstractmethod,
@@ -22,7 +23,9 @@ class JWTManager(ABC):
         """Refresh tokens using refresh token."""
 
     @abstractmethod
-    def _generate_token(self, payload: dict, type_: str) -> str:
+    def _generate_token(
+        self, payload: dict, type_: str, iat: datetime.datetime, exp: datetime.datetime
+    ) -> str:
         """Generate a JWT token."""
 
     @abstractmethod
